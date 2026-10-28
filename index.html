@@ -964,6 +964,9 @@ html[data-theme="dark"] .fv-token-part.tp-header{background:#2b1f0a;color:#e2a33
 <script>
 window.FRAUDSHIELD_KB={
 docs:[
+{id:'perf-percentiles',title:'What P50, P95 and P99 Mean (Latency Percentiles)',anchor:'hld-nfr',tags:['p99','p50','p95','percentile','latency','what is p99','performance','ms','milliseconds','response time','under 100','speed'],text:'P99 means the 99th percentile. When we say fraud evaluation is under 100ms P99, it means 99 out of every 100 transactions finish in less than 100 milliseconds — only the slowest 1% might take longer. Percentiles are a better performance measure than an average because averages hide slow outliers. P50 (the median) is the typical case — half of requests are faster, half slower. P95 means 95% finish under the stated time. P99 is close to the worst case that normal users actually experience. Engineers target P99 (not the average) because a system can have a great average latency while still being painfully slow for a small but real set of users. For FraudShield: P50 fraud evaluation is ~35ms, P99 is under 100ms, end-to-end P99 (request to user alert) is under 200ms.'},
+{id:'tx-fields',title:'Transaction Request Fields — Why These Four',anchor:'svc-transaction',tags:['transaction fields','request body','amount','currency','merchant','location','why these fields','payload','why amount','why currency','why merchant','why location','what data'],text:'A transaction request carries exactly four core fields because each one feeds a specific fraud rule. AMOUNT is needed for the amount-anomaly rule — the engine compares it against the user 30-day average and flags anything more than 3x larger; without the amount you cannot detect a sudden large purchase. CURRENCY matters because a sudden switch to an unusual currency is a fraud signal and amounts must be normalized before comparison (100 USD is not 100 JPY). MERCHANT is used for duplicate detection — the same amount to the same merchant within 10 seconds is flagged as a double-charge or a card-testing attack. LOCATION (latitude/longitude) powers the geo-mismatch rule — if the login country differs from the transaction country, the score goes up. In short: each field exists only because a fraud rule needs it. The design keeps the payload minimal — no card numbers are ever sent, which keeps FraudShield out of PCI-DSS scope. More fields would mean more data to secure with no extra detection value.'},
+{id:'why-minimal','title':'Why the Payload is Minimal','anchor':'svc-transaction',tags:['minimal payload','why only four','less data','pci','card data','security why','data minimization'],text:'FraudShield deliberately keeps the transaction payload to amount, currency, merchantId, and geo coordinates. This is data minimization — a core security principle. Card numbers, CVV, and cardholder names are never sent, so FraudShield never stores sensitive cardholder data and stays out of PCI-DSS compliance scope. Every field that IS sent maps directly to a fraud rule (amount to anomaly detection, currency to normalization, merchant to duplicate detection, location to geo-mismatch). Adding extra fields would increase the attack surface and storage cost without improving fraud detection, so they are left out.'},
 {id:'overview',title:'What FraudShield Is',anchor:'overview',tags:['intro','overview','fraud','detection'],text:'FraudShield is a real-time event-driven fraud detection platform built with Java 17 and Spring Boot 3.2. It ingests payment transaction events, evaluates them against a configurable rules engine, flags suspicious activity, and alerts users within milliseconds. Uses Apache Kafka as the event backbone, Redis for sliding-window counters and token blacklisting, and PostgreSQL for durable storage.'},
 {id:'architecture',title:'The Big Picture',anchor:'architecture',tags:['architecture','system','context','c4','diagram'],text:'Six Spring Boot microservices communicate over Apache Kafka and REST. Transaction Service is the only public entry point. Rules Engine evaluates fraud using Redis sliding windows. Alert Service dispatches notifications. Admin API is the control plane. Auth Service manages JWT tokens. Notification Worker sends emails/SMS.'},
 {id:'hld',title:'High-Level Design',anchor:'hld',tags:['hld','design','high level'],text:'Event-Driven Microservices with CQRS. Services communicate asynchronously via Kafka topics. Each service owns its data store. Synchronous REST only for client-facing APIs. System targets 99.9% uptime and sub-100ms fraud evaluation latency.'},
@@ -979,6 +982,9 @@ docs:[
 {id:'faq',title:'FAQ',anchor:'faq',tags:['faq','questions','answers'],text:'Why JWT not sessions? Stateless, no DB lookup per request. Why Kafka not RabbitMQ? Message retention and replay. Why BCrypt cost 12? ~250ms per hash, brute-force resistant. Why hash refresh tokens? DB breach protection. How change rules without redeploy? Rules in DB refreshed every 60s. Why Redis for rate limiting? O(1) atomic operations, shared across instances.'}
 ],
 faqs:[
+{pattern:/\bp\s?99\b|\bp\s?95\b|\bp\s?50\b|percentile|what.*100.*ms|what.*ms\b/i,answer:'P99 = the 99th percentile. "Under 100ms P99" means 99 out of every 100 transactions are evaluated in less than 100 milliseconds — only the slowest 1% may take longer. Percentiles beat averages because an average hides slow outliers. P50 (median) is the typical case, P95 is 95% of requests, P99 is near the worst case real users hit. FraudShield: P50 ~35ms, P99 <100ms for fraud eval, <200ms end-to-end (request to alert).'},
+{pattern:/why.*(amount|currency|merchant|location|field|these|four|only|send|data|payload)/i,answer:'Each of the four transaction fields feeds a specific fraud rule: AMOUNT drives the amount-anomaly rule (flags payments >3x the user average), CURRENCY is needed to normalize values and catch unusual-currency switches, MERCHANT powers duplicate detection (same amount+merchant within 10s = double-charge/card-testing), and LOCATION drives the geo-mismatch rule (login country vs transaction country). The payload is kept minimal on purpose — no card numbers are sent, which keeps FraudShield out of PCI-DSS scope and reduces the attack surface. Every field exists only because a rule needs it.'},
+{pattern:/(what|which).*(field|data|send|request).*(transaction|api)/i,answer:'A transaction request sends four core fields: amount, currency, merchantId, and geo coordinates (latitude/longitude). Each maps to a fraud rule. Card numbers and CVV are never sent — this is deliberate data minimization to stay out of PCI-DSS scope. See the Transaction Service section.'},
 {pattern:/how.*run|start.*project|get.*started/i,answer:'Run `mvn spring-boot:run` in mock mode (H2, no infra). For full stack: `docker-compose up --build`. See Build & Deployment section.'},
 {pattern:/jwt.*work|how.*token|access token/i,answer:'JWT access tokens (15min) + refresh tokens (7d). JWT filter validates signature, expiry, and Redis blacklist on every request. See Auth & Token Flow section.'},
 {pattern:/kafka.*down|if kafka fail/i,answer:'Transaction Service buffers, returns 503 after buffer full. Rules Engine pauses and resumes on recovery. No data loss — Kafka retains messages 7 days.'},
@@ -1118,7 +1124,7 @@ function expandQuery(tokens){var syn=(window.FRAUDSHIELD_KB||{}).synonyms||{},ex
 function buildIDF(docs){var df={};docs.forEach(function(d){var seen={};tokenize(d.text+' '+d.title+' '+d.tags.join(' ')).forEach(function(t){if(!seen[t]){df[t]=(df[t]||0)+1;seen[t]=true;}});});var N=docs.length,idf={};Object.keys(df).forEach(function(t){idf[t]=Math.log((N+1)/(df[t]+1))+1;});return idf;}
 function scoreDoc(query,doc,idf){var qT=expandQuery(tokenize(query)),bodyT=tokenize(doc.text),titleT=tokenize(doc.title+' '+doc.tags.join(' ')),tf={};bodyT.forEach(function(t){tf[t]=(tf[t]||0)+1;});titleT.forEach(function(t){tf[t]=(tf[t]||0)+3;});var len=bodyT.length+1,s=0;qT.forEach(function(t){if(tf[t])s+=(tf[t]/len)*(idf[t]||1);});return s;}
 function retrieveTop(query,n){var kb=window.FRAUDSHIELD_KB||{docs:[],faqs:[]},docs=kb.docs||[],idf=buildIDF(docs);n=n||3;return docs.map(function(d){return{doc:d,score:scoreDoc(query,d,idf)};}).filter(function(r){return r.score>0;}).sort(function(a,b){return b.score-a.score;}).slice(0,n).map(function(r){return r.doc;});}
-function offlineAnswer(query){var kb=window.FRAUDSHIELD_KB||{docs:[],faqs:[],smalltalk:{}},clean=query.trim().toLowerCase(),st=kb.smalltalk||{};if(st[clean])return{text:st[clean],doc:null};var faqs=kb.faqs||[];for(var i=0;i<faqs.length;i++){if(faqs[i].pattern.test(query)){var top=retrieveTop(query,1)[0]||null;return{text:faqs[i].answer,doc:top};}}var results=retrieveTop(query,1);if(!results.length)return{text:"I don't have specific info about that. Try asking about auth, Kafka, rules engine, deployment, or security.",doc:null};var doc=results[0],snippet=doc.text.slice(0,280).replace(/\s+/g,' ').trim();if(doc.text.length>280)snippet+='…';return{text:snippet,doc:doc};}
+function offlineAnswer(query){var kb=window.FRAUDSHIELD_KB||{docs:[],faqs:[],smalltalk:{}},clean=query.trim().toLowerCase(),st=kb.smalltalk||{};if(st[clean])return{text:st[clean],doc:null};var faqs=kb.faqs||[];for(var i=0;i<faqs.length;i++){if(faqs[i].pattern.test(query)){var top=retrieveTop(query,1)[0]||null;return{text:faqs[i].answer,doc:top};}}var results=retrieveTop(query,1);if(!results.length)return{text:"I couldn't find that in the guide's offline knowledge. For open-ended \"why\" or \"what if\" questions, turn on AI mode: click the ⚙️ gear above and pick \"🆓 Built-in AI (no key required)\" — it can reason over the whole guide. Or ask me about auth, Kafka, rules engine, transaction fields, deployment, or security.",doc:null};var doc=results[0],snippet=doc.text.slice(0,280).replace(/\s+/g,' ').trim();if(doc.text.length>280)snippet+='…';return{text:snippet,doc:doc};}
 function getProvider(){var p=PROVIDERS[settings.provider]||PROVIDERS.free;if(settings.provider==='custom')return{url:settings.customUrl||p.url,model:settings.customModel||'gpt-3.5-turbo'};return{url:p.url,model:settings.model||p.model};}
 function buildSystemPrompt(query){var top3=retrieveTop(query,3),ctx=top3.map(function(d){return'### '+d.title+' (#'+d.anchor+')\n'+d.text;}).join('\n\n');return'You are the FraudShield architecture guide assistant. Answer based on the context. End with "📖 Read: <section title>".\n\nCONTEXT:\n'+ctx;}
 async function aiAnswer(query,onChunk,onDone,onError){var prov=getProvider(),apiKey=settings.apiKey||'',headers={'Content-Type':'application/json'};if(apiKey)headers['Authorization']='Bearer '+apiKey;var body=JSON.stringify({model:prov.model,stream:true,messages:[{role:'system',content:buildSystemPrompt(query)},{role:'user',content:query}]});try{var resp=await fetch(prov.url+'/chat/completions',{method:'POST',headers:headers,body:body});if(!resp.ok)throw new Error('HTTP '+resp.status);var reader=resp.body.getReader(),decoder=new TextDecoder(),full='';while(true){var result=await reader.read();if(result.done)break;var chunk=decoder.decode(result.value,{stream:true});chunk.split('\n').forEach(function(line){line=line.trim();if(!line.startsWith('data: '))return;var data=line.slice(6);if(data==='[DONE]')return;try{var parsed=JSON.parse(data),content=(parsed.choices[0].delta||{}).content||'';if(content){full+=content;onChunk(content);}}catch(e){}});}onDone(full);}catch(err){onError(err);}}
@@ -1300,5 +1306,317 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
   else { init(); }
 })();
 </script>
+<style>
+/* ===== Clickable abbreviation terms ===== */
+.term-link{position:relative;color:var(--brand);border-bottom:1.5px dotted var(--brand);cursor:pointer;font-weight:600;transition:background .15s;border-radius:3px;padding:0 1px;}
+.term-link:hover{background:var(--brand-soft);}
+html[data-theme="dark"] .term-link:hover{background:var(--brand-soft);}
+
+/* ===== Animated cloud tooltip ===== */
+.term-link::after{
+  content:'💡 ' attr(data-tip);
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 10px);
+  transform:translateX(-50%) translateY(6px) scale(.9);
+  background:linear-gradient(135deg,#0b5fff,#00a98f);
+  color:#fff;
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.01em;
+  padding:6px 12px;
+  border-radius:999px;
+  white-space:nowrap;
+  box-shadow:0 6px 20px rgba(11,95,255,.35);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1);
+  z-index:50;
+}
+/* little cloud tail */
+.term-link::before{
+  content:'';
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 4px);
+  transform:translateX(-50%) translateY(6px) scale(.9);
+  border:6px solid transparent;
+  border-top-color:#00a98f;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1);
+  z-index:50;
+}
+.term-link:hover::after{
+  opacity:1;
+  transform:translateX(-50%) translateY(0) scale(1);
+  animation:tipFloat 2s ease-in-out infinite .22s;
+}
+.term-link:hover::before{
+  opacity:1;
+  transform:translateX(-50%) translateY(0) scale(1);
+}
+@keyframes tipFloat{
+  0%,100%{margin-bottom:0;}
+  50%{margin-bottom:4px;}
+}
+
+/* ===== Term explainer side panel ===== */
+#term-panel{position:fixed;top:0;right:-440px;width:420px;max-width:92vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);box-shadow:-12px 0 40px rgba(0,0,0,.25);z-index:3000;display:flex;flex-direction:column;transition:right .3s cubic-bezier(.4,0,.2,1);}
+#term-panel.open{right:0;}
+.tp-head{background:linear-gradient(135deg,#0b5fff,#00a98f);padding:18px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.tp-head-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tp-head-info{flex:1;min-width:0;}
+.tp-head-title{color:#fff;font-weight:800;font-size:15px;}
+.tp-head-sub{color:rgba(255,255,255,.75);font-size:11.5px;}
+#tp-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:15px;cursor:pointer;flex-shrink:0;}
+#tp-close:hover{background:rgba(255,255,255,.35);}
+.tp-body{flex:1;overflow-y:auto;padding:20px;}
+.tp-body::-webkit-scrollbar{width:4px;}.tp-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.tp-term-name{font-size:22px;font-weight:800;color:var(--text);margin-bottom:2px;}
+.tp-term-full{font-size:13px;color:var(--text-muted);margin-bottom:16px;font-style:italic;}
+.tp-section{margin-bottom:16px;}
+.tp-section-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--brand);margin-bottom:6px;}
+.tp-section p{font-size:13.5px;color:var(--text-soft);line-height:1.65;margin:0;}
+.tp-ai-answer{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13.5px;line-height:1.7;color:var(--text-soft);min-height:40px;}
+.tp-ai-answer .typing{display:inline-block;width:7px;height:14px;background:var(--brand);animation:tpBlink 1s step-end infinite;vertical-align:middle;}
+@keyframes tpBlink{50%{opacity:0;}}
+.tp-ai-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;background:var(--brand-soft);color:var(--brand-ink);padding:2px 9px;border-radius:999px;margin-bottom:8px;}
+.tp-jump{display:inline-block;margin-top:14px;padding:7px 14px;background:var(--brand-soft);border:1px dashed var(--brand);border-radius:7px;color:var(--brand-ink);font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;}
+#term-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:2999;opacity:0;pointer-events:none;transition:opacity .3s;}
+#term-overlay.open{opacity:1;pointer-events:auto;}
+@media(max-width:520px){#term-panel{width:100vw;max-width:100vw;right:-100vw;}}
+
+/* ===== Draggable chatbot ===== */
+.chat-head{cursor:grab;user-select:none;}
+.chat-head:active{cursor:grabbing;}
+#chat-panel.dragged{transition:none;}
+</style>
+
+<div id="term-overlay"></div>
+<aside id="term-panel" aria-label="Term explainer">
+  <div class="tp-head">
+    <div class="tp-head-avatar">🤖</div>
+    <div class="tp-head-info">
+      <div class="tp-head-title">Concept Explainer</div>
+      <div class="tp-head-sub">AI-assisted glossary</div>
+    </div>
+    <button id="tp-close" aria-label="Close">&#x2715;</button>
+  </div>
+  <div class="tp-body">
+    <div class="tp-term-name" id="tp-name">—</div>
+    <div class="tp-term-full" id="tp-full"></div>
+    <div class="tp-section">
+      <div class="tp-section-label">What it is</div>
+      <p id="tp-what"></p>
+    </div>
+    <div class="tp-section">
+      <div class="tp-section-label">How FraudShield uses it</div>
+      <p id="tp-use"></p>
+    </div>
+    <div class="tp-section">
+      <div class="tp-ai-badge">🤖 AI explanation</div>
+      <div class="tp-ai-answer" id="tp-ai">Ask the AI for a deeper explanation…</div>
+      <a class="tp-jump" id="tp-jump" style="display:none">📖 Read full section</a>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function(){
+'use strict';
+
+/* ---- Glossary: term -> explanation + project usage + anchor ---- */
+var GLOSSARY = {
+  'JWT': {full:'JSON Web Token', anchor:'svc-auth',
+    what:'A compact, digitally-signed token that carries user identity (userId, roles, expiry). Because it is signed, the server can trust it without looking anything up in a database.',
+    use:'FraudShield issues a JWT on login (15-minute lifetime). Every API request carries it in the Authorization header. Each service verifies the signature locally — no database call — which is what lets the system scale to many instances cheaply.'},
+  'refresh token':{full:'Refresh Token', anchor:'auth-lambda',
+    what:'A long-lived, single-use token used to get a fresh JWT when the short one expires, without forcing the user to log in again.',
+    use:'FraudShield stores refresh tokens hashed in PostgreSQL with a 7-day life. Each time one is used it is rotated — the old one is deleted and a new pair issued — so a stolen refresh token is caught the next time the real user tries to use it.'},
+  'refresh token rotation':{full:'Refresh Token Rotation', anchor:'auth-lambda',
+    what:'A security technique where every use of a refresh token invalidates it and issues a brand-new one. Each refresh token works exactly once.',
+    use:'If an attacker steals a refresh token and uses it, the legitimate user\'s next refresh fails (token already consumed) — signalling theft. Both sessions are then forced to re-login, limiting the damage.'},
+  'RBAC':{full:'Role-Based Access Control', anchor:'security',
+    what:'A permission model where access is granted to roles (like ADMIN or ANALYST), and users are assigned roles — rather than giving permissions to each user individually.',
+    use:'FraudShield has four roles: USER, ANALYST, ADMIN, SUPER_ADMIN. Spring Security enforces them both at the URL level and per-method. A regular USER hitting an /api/admin endpoint gets 403 Forbidden — they are authenticated, just not authorised.'},
+  'Redis':{full:'Redis (in-memory data store)', anchor:'tech-stack',
+    what:'An extremely fast in-memory key-value database, used when you need sub-millisecond reads and writes.',
+    use:'FraudShield uses Redis for two jobs: sliding-window counters for the velocity fraud rule (counting payments per user in the last 60 seconds), and the JWT blacklist that makes logout actually work.'},
+  'Redis blacklist':{full:'Redis Token Blacklist', anchor:'auth-lambda',
+    what:'A list (stored in Redis) of tokens that have been revoked before their natural expiry — used to honour logout for otherwise self-contained JWTs.',
+    use:'When a user logs out, FraudShield adds the token\'s ID to a Redis set with a time-to-live equal to the token\'s remaining life. Every request checks this blacklist, so a logged-out token is rejected even though it is still cryptographically valid.'},
+  'BCrypt':{full:'BCrypt password hashing', anchor:'svc-auth',
+    what:'A deliberately slow password-hashing algorithm with an adjustable "cost factor" that makes brute-force attacks impractical.',
+    use:'FraudShield hashes all user passwords with BCrypt at cost factor 12 (~250ms per hash). Slow enough to defeat mass guessing, fast enough that a single login feels instant. Passwords are never stored in plain text.'},
+  'Kafka':{full:'Apache Kafka', anchor:'tech-stack',
+    what:'A distributed event-streaming platform — an append-only log of messages that producers write to and consumers read from, with messages retained for days.',
+    use:'Kafka is FraudShield\'s backbone. Transactions flow through topics (raw-transactions, fraud-verdicts, alert-notifications). If a service is down, messages wait in Kafka and are processed on recovery — nothing is lost, and the whole pipeline can replay.'},
+  'PostgreSQL':{full:'PostgreSQL', anchor:'tech-stack',
+    what:'A powerful open-source relational (SQL) database with full ACID guarantees.',
+    use:'FraudShield uses PostgreSQL as the durable store for transactions, fraud rules, verdicts, users, and audit logs. In local dev it is swapped for H2 (an in-memory database) so you need zero setup.'},
+  'CQRS':{full:'Command Query Responsibility Segregation', anchor:'hld-style',
+    what:'An architectural pattern that separates the write path (commands that change data) from the read path (queries that fetch data), so each can be optimised independently.',
+    use:'In FraudShield, transaction ingestion (write-heavy, needs throughput) is separated from analyst dashboards and reports (read-heavy), letting each scale on its own.'},
+  'circuit breaker':{full:'Circuit Breaker', anchor:'resilience',
+    what:'A resilience pattern that stops calling a failing service for a while, giving it time to recover and preventing cascade failures — like an electrical breaker tripping.',
+    use:'FraudShield wraps the Alert → Notification call in a circuit breaker (Resilience4j). If 50% of calls fail over 10 attempts, it "opens" and holds alerts as PENDING for 30 seconds before probing again.'},
+  'idempotency':{full:'Idempotency', anchor:'resilience',
+    what:'A property where doing the same operation multiple times has the same effect as doing it once — critical when a message might be delivered more than once.',
+    use:'Kafka guarantees at-least-once delivery, so a transaction event can arrive twice. FraudShield stores each processed transaction ID in Redis, so a duplicate is silently skipped instead of being scored twice.'},
+  'DLQ':{full:'Dead Letter Queue', anchor:'resilience',
+    what:'A separate queue where messages that repeatedly fail processing are parked for later manual inspection, instead of being lost or blocking the pipeline.',
+    use:'After 3 failed retries, FraudShield routes a bad message to a dead-letter topic (e.g. raw-transactions.DLT) so the ops team can investigate without losing the data.'},
+  'Spring Security':{full:'Spring Security', anchor:'tech-stack',
+    what:'The industry-standard security framework for Java/Spring apps — handling authentication, authorization, CSRF, CORS, and password encoding.',
+    use:'FraudShield uses Spring Security 6 for the whole JWT filter chain, RBAC enforcement, and security headers — rather than hand-writing auth, which is notoriously easy to get wrong.'},
+  'sliding window':{full:'Sliding Window Counter', anchor:'svc-rules-engine',
+    what:'A time-based counter that tracks events over a rolling period (e.g. the last 60 seconds), more accurate than a fixed window that resets at clock boundaries.',
+    use:'FraudShield\'s velocity rule uses a Redis sorted set as a sliding window: if a user makes more than 5 payments in any rolling 60-second span, the fraud score jumps.'}
+};
+
+/* ---- Auto-link terms in the content ---- */
+function escapeRegex(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function autoLinkTerms(){
+  // Sort by length desc so "refresh token rotation" matches before "refresh token"
+  var terms = Object.keys(GLOSSARY).sort(function(a,b){return b.length-a.length;});
+  var content = document.querySelector('.content-inner');
+  if(!content) return;
+  // Walk text nodes, skip code/pre/headings/existing links
+  var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
+    acceptNode:function(node){
+      var p = node.parentNode;
+      if(!p) return NodeFilter.FILTER_REJECT;
+      var tag = p.nodeName.toLowerCase();
+      if(tag==='code'||tag==='pre'||tag==='a'||tag==='script'||tag==='style'||p.classList.contains('term-link')) return NodeFilter.FILTER_REJECT;
+      if(p.closest('pre')||p.closest('code')) return NodeFilter.FILTER_REJECT;
+      if(!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var nodes=[], n;
+  while(n=walker.nextNode()) nodes.push(n);
+  var linked={}; // link each term only a few times to avoid clutter
+  nodes.forEach(function(node){
+    var text = node.nodeValue;
+    for(var i=0;i<terms.length;i++){
+      var term = terms[i];
+      if((linked[term]||0) >= 3) continue;
+      // word-boundary, case-insensitive, whole term
+      var re = new RegExp('\\b('+escapeRegex(term)+')\\b','i');
+      var m = re.exec(text);
+      if(m){
+        var before=text.slice(0,m.index), after=text.slice(m.index+m[0].length);
+        var span=document.createElement('span');
+        span.className='term-link';
+        span.textContent=m[0];
+        span.setAttribute('data-term',term);
+        span.setAttribute('data-tip','Click to explain '+m[0]);
+        var frag=document.createDocumentFragment();
+        if(before)frag.appendChild(document.createTextNode(before));
+        frag.appendChild(span);
+        if(after)frag.appendChild(document.createTextNode(after));
+        node.parentNode.replaceChild(frag,node);
+        linked[term]=(linked[term]||0)+1;
+        return; // node replaced; move on
+      }
+    }
+  });
+}
+
+/* ---- Open the side panel for a term ---- */
+function openTermPanel(term){
+  var g = GLOSSARY[term];
+  if(!g) return;
+  document.getElementById('tp-name').textContent = term;
+  document.getElementById('tp-full').textContent = g.full;
+  document.getElementById('tp-what').textContent = g.what;
+  document.getElementById('tp-use').textContent = g.use;
+  var jump = document.getElementById('tp-jump');
+  if(g.anchor){
+    jump.style.display='inline-block';
+    jump.onclick=function(){ closeTermPanel(); if(window.fraudshieldJumpTo) window.fraudshieldJumpTo(g.anchor); };
+  } else { jump.style.display='none'; }
+  // AI explanation
+  var aiBox = document.getElementById('tp-ai');
+  aiBox.innerHTML = 'Thinking… <span class="typing"></span>';
+  explainWithAI(term, g, aiBox);
+  document.getElementById('term-panel').classList.add('open');
+  document.getElementById('term-overlay').classList.add('open');
+}
+function closeTermPanel(){
+  document.getElementById('term-panel').classList.remove('open');
+  document.getElementById('term-overlay').classList.remove('open');
+}
+
+/* ---- AI explanation (uses built-in keyless provider; falls back to glossary) ---- */
+async function explainWithAI(term, g, box){
+  var prompt = 'In 2-3 short sentences, explain the technical concept "'+term+'" ('+g.full+') to a developer, and specifically how it is used in FraudShield, an event-driven fraud detection system. Context: '+g.use+' Keep it simple and concrete.';
+  try{
+    var resp = await fetch('https://text.pollinations.ai/openai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'openai-fast',stream:false,messages:[{role:'user',content:prompt}]})
+    });
+    if(!resp.ok) throw new Error('bad status');
+    var data = await resp.json();
+    var txt = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    if(txt.trim()){ box.textContent = txt.trim(); }
+    else { box.textContent = g.what+' '+g.use; }
+  }catch(e){
+    // Offline / blocked: fall back to the stored explanation
+    box.textContent = g.what+' '+g.use;
+  }
+}
+
+/* ---- Make the chatbot draggable by its header ---- */
+function makeChatDraggable(){
+  var panel = document.getElementById('chat-panel');
+  var head = panel ? panel.querySelector('.chat-head') : null;
+  if(!panel || !head) return;
+  var dragging=false, startX=0, startY=0, origX=0, origY=0;
+  head.addEventListener('mousedown', function(e){
+    // ignore clicks on header buttons
+    if(e.target.closest('button')) return;
+    dragging=true;
+    panel.classList.add('dragged');
+    var rect = panel.getBoundingClientRect();
+    // switch to left/top positioning
+    panel.style.left = rect.left+'px';
+    panel.style.top = rect.top+'px';
+    panel.style.right='auto';
+    panel.style.bottom='auto';
+    startX=e.clientX; startY=e.clientY; origX=rect.left; origY=rect.top;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){
+    if(!dragging) return;
+    var nx = origX + (e.clientX-startX);
+    var ny = origY + (e.clientY-startY);
+    // keep within viewport
+    nx = Math.max(0, Math.min(nx, window.innerWidth - panel.offsetWidth));
+    ny = Math.max(0, Math.min(ny, window.innerHeight - panel.offsetHeight));
+    panel.style.left=nx+'px';
+    panel.style.top=ny+'px';
+  });
+  document.addEventListener('mouseup', function(){ dragging=false; });
+}
+
+/* ---- Wire everything ---- */
+function init(){
+  autoLinkTerms();
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('.term-link');
+    if(t){ openTermPanel(t.getAttribute('data-term')); }
+  });
+  document.getElementById('tp-close').addEventListener('click', closeTermPanel);
+  document.getElementById('term-overlay').addEventListener('click', closeTermPanel);
+  makeChatDraggable();
+}
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); }
+else { init(); }
+})();
+</script>
+
 </body>
 </html>
