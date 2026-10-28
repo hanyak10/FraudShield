@@ -1,0 +1,1304 @@
+<!-- FraudShield Standalone — 2026-10-28T09:15:32.437Z -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FraudShield — Architecture Guide</title>
+  <meta name="description" content="Real-time event-driven fraud detection system — architecture guide, HLD, service catalog, auth flows, and operations." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMGI1ZmZmIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDBhOThmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHBhdGggZD0iTTE2IDJMMjkgN3YxMGMwIDcuNS01LjUgMTIuNS0xMyAxNEM4LjUgMjkuNSAzIDI0LjUgMyAxN1Y3eiIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjE2IiB5PSIyMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkludGVyLEFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI4MDAiIGZvbnQtc2l6ZT0iMTUiIGZpbGw9IndoaXRlIj5GPC90ZXh0Pjwvc3ZnPg==" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#f7f8fa;--surface:#fff;--surface-2:#f0f2f5;--border:#e3e6ea;--text:#1f2733;--text-soft:#4b5563;--text-muted:#7a8595;--brand:#0b5fff;--brand-ink:#0a3fb0;--brand-soft:#e7f0ff;--accent:#00a98f;--warn:#c9770a;--danger:#d64545;--code-bg:#f3f5f8;--code-ink:#b1246b;--radius:12px;--radius-sm:8px;--sidebar-w:300px;--maxcol:860px;--sans:'Inter',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',Consolas,'Courier New',monospace;--shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 12px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.06);--shadow-lg:0 10px 28px rgba(0,0,0,.13),0 4px 10px rgba(0,0,0,.08);}
+html[data-theme="dark"]{--bg:#0e1420;--surface:#141c2b;--surface-2:#1b2435;--border:#273146;--text:#e6ebf2;--text-soft:#b7c0ce;--text-muted:#8491a3;--brand:#5b9dff;--brand-ink:#9cc2ff;--brand-soft:#16233c;--accent:#30d6b8;--warn:#e2a33d;--danger:#ff6b6b;--code-bg:#1b2435;--code-ink:#f07ab0;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.35);--shadow-lg:0 10px 28px rgba(0,0,0,.45);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.7;transition:background .25s,color .25s;}
+#progress-bar{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--brand),var(--accent));z-index:9999;transition:width .1s linear;}
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.sidebar::-webkit-scrollbar{width:4px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand-block{display:flex;align-items:center;gap:12px;padding:24px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.brand-badge{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;flex-shrink:0;}
+.brand-name{font-weight:700;font-size:15px;line-height:1.2;}.brand-sub{font-size:11px;color:var(--text-muted);}
+.sidebar-search{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-search input{width:100%;padding:7px 10px 7px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:var(--sans);outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a8595' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;transition:border-color .2s;}
+.sidebar-search input:focus{border-color:var(--brand);}
+nav.toc{padding:12px 0 80px;flex:1;}
+.toc-chapter{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:14px 20px 4px;display:block;}
+nav.toc a{display:block;padding:6px 20px;font-size:13.5px;color:var(--text-soft);text-decoration:none;border-left:2px solid transparent;transition:background .15s,color .15s,border-color .15s;}
+nav.toc a .num{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-right:6px;}
+nav.toc a:hover{background:var(--surface-2);color:var(--text);}
+nav.toc a.active{background:var(--brand-soft);color:var(--brand-ink);border-left-color:var(--brand);font-weight:600;}
+nav.toc a.sub{padding-left:36px;font-size:13px;}
+.topbar{display:none;position:sticky;top:0;z-index:300;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;height:52px;align-items:center;gap:12px;}
+html[data-theme="dark"] .topbar{background:rgba(20,28,43,.85);}
+.topbar-title{flex:1;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;backdrop-filter:blur(2px);}
+.content{margin-left:var(--sidebar-w);flex:1;min-width:0;padding:46px 40px;}
+.content-inner{max-width:var(--maxcol);margin:0 auto;}
+.hero{background:radial-gradient(ellipse at 60% 40%,var(--brand-soft) 0%,transparent 65%),linear-gradient(135deg,var(--surface) 0%,var(--surface-2) 100%);border:1px solid var(--border);border-radius:18px;padding:40px;margin-bottom:48px;box-shadow:var(--shadow-md);}
+.hero h1{font-size:36px;font-weight:800;letter-spacing:-.8px;margin-bottom:8px;color:var(--text);}
+.hero-tagline{font-size:16px;color:var(--text-muted);margin-bottom:24px;}
+.tech-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.tech-pill{background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600;color:var(--text-soft);box-shadow:var(--shadow-sm);}
+.section-kicker{font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:6px;display:block;}
+section{margin-bottom:64px;scroll-margin-top:20px;}
+h2{font-size:27px;font-weight:800;letter-spacing:-.5px;color:var(--text);margin-bottom:20px;position:relative;}
+h3{font-size:20px;font-weight:700;margin-bottom:12px;margin-top:32px;color:var(--text);scroll-margin-top:20px;}
+h4{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text);}
+h2:hover .anchor-link,h3:hover .anchor-link{opacity:1;}
+.anchor-link{opacity:0;margin-left:8px;color:var(--text-muted);text-decoration:none;font-weight:400;transition:opacity .2s;}
+p{color:var(--text-soft);margin-bottom:14px;}
+strong{color:var(--text);}
+ul,ol{color:var(--text-soft);padding-left:20px;margin-bottom:14px;}
+li{margin-bottom:4px;}
+ul li::marker{color:var(--brand);}
+.rule{border:none;border-top:1px solid var(--border);margin:48px 0;}
+code{background:var(--code-bg);color:var(--code-ink);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:.875em;}
+pre{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;overflow-x:hidden;margin-bottom:20px;}
+pre code{background:none;color:var(--text-soft);padding:0;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.callout{display:flex;gap:14px;padding:16px 18px;border-radius:var(--radius);border-left:4px solid;margin-bottom:20px;}
+.callout .ico{font-size:18px;flex-shrink:0;line-height:1.5;}.callout .body{flex:1;}.callout .body p{margin:0;}
+.callout.info{background:var(--brand-soft);border-color:var(--brand);}
+.callout.tip{background:#e6f9f5;border-color:var(--accent);}
+.callout.warn{background:#fff4e0;border-color:var(--warn);}
+.callout.danger{background:#fdecea;border-color:var(--danger);}
+html[data-theme="dark"] .callout.tip{background:#0f2b25;}
+html[data-theme="dark"] .callout.warn{background:#2b1f0a;}
+html[data-theme="dark"] .callout.danger{background:#2b0f0f;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);transition:transform .2s,box-shadow .2s;}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.card-ico{font-size:22px;margin-bottom:10px;}.card h4{margin-bottom:6px;}.card p{font-size:13.5px;margin:0;}
+.tag{display:inline-block;margin-top:10px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--brand-soft);color:var(--brand-ink);}
+.table-wrap{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);margin-bottom:24px;box-shadow:var(--shadow-sm);}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:13.8px;}
+.table-wrap thead th{background:var(--surface-2);padding:10px 14px;text-align:left;font-weight:700;color:var(--text);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;}
+.table-wrap tbody td{padding:10px 14px;border-top:1px solid var(--border);color:var(--text-soft);vertical-align:top;}
+.table-wrap tbody tr:hover td{background:var(--surface-2);}
+.chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;}
+.chip.ok{background:#e0f5ef;color:#0a6b4b;}.chip.warn{background:#fff0d4;color:#7a4800;}.chip.err{background:#fdecea;color:#a31515;}.chip.info{background:var(--brand-soft);color:var(--brand-ink);}
+html[data-theme="dark"] .chip.ok{background:#0a2b1f;color:#30d6b8;}
+html[data-theme="dark"] .chip.warn{background:#2b1f0a;color:#e2a33d;}
+html[data-theme="dark"] .chip.err{background:#2b0f0f;color:#ff6b6b;}
+.facts{display:grid;grid-template-columns:160px 1fr;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;box-shadow:var(--shadow-sm);}
+.facts dt{background:var(--surface-2);padding:9px 14px;font-size:12.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-top:1px solid var(--border);}
+.facts dd{background:var(--surface);padding:9px 14px;font-size:13.5px;color:var(--text-soft);border-top:1px solid var(--border);}
+.facts dt:first-child,.facts dd:first-child+dd{border-top:none;}
+.steps{list-style:none;padding:0;position:relative;margin-bottom:24px;}
+.steps::before{content:'';position:absolute;left:15px;top:20px;bottom:20px;width:2px;background:var(--border);}
+.steps li{display:flex;gap:16px;padding:8px 0;position:relative;z-index:1;}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-body{padding-top:4px;}
+.diagram{margin-bottom:28px;}
+.diagram figure{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 20px 16px;box-shadow:var(--shadow-sm);}
+.diagram figure .mermaid{display:flex;justify-content:center;overflow-x:auto;}
+.diagram figure figcaption{text-align:center;font-size:12.5px;color:var(--text-muted);font-style:italic;margin-top:12px;}
+.diagram-fallback{display:none;background:var(--surface-2);border-radius:var(--radius-sm);padding:16px;font-family:var(--mono);font-size:12px;color:var(--text-muted);white-space:pre;overflow-x:auto;}
+#chat-fab{position:fixed;bottom:28px;right:28px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;z-index:1000;transition:transform .2s,box-shadow .2s;}
+#chat-fab:hover{transform:scale(1.08);}
+#chat-panel{position:fixed;bottom:100px;right:28px;width:400px;height:580px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;z-index:1001;overflow:hidden;transition:opacity .25s,transform .25s;}
+#chat-panel.hidden{opacity:0;pointer-events:none;transform:translateY(20px) scale(.97);}
+.chat-head{background:linear-gradient(135deg,var(--brand),var(--accent));padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.chat-head-info{flex:1;}.chat-head-title{color:#fff;font-weight:700;font-size:14px;}.chat-head-status{display:flex;align-items:center;gap:6px;margin-top:2px;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;}
+.mode-pill{font-size:10px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;padding:1px 7px;border-radius:999px;letter-spacing:.05em;}
+.chat-head-actions{display:flex;gap:8px;}
+.chat-head-actions button{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;transition:background .15s;}
+.chat-head-actions button:hover{background:rgba(255,255,255,.15);}
+.chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.chat-body::-webkit-scrollbar{width:4px;}.chat-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.msg{display:flex;gap:8px;max-width:92%;}.msg.bot{align-self:flex-start;}.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;}
+.msg.bot .msg-avatar{background:var(--brand-soft);}.msg.user .msg-avatar{background:var(--surface-2);}
+.msg-bubble{padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.55;}
+.msg.bot .msg-bubble{background:var(--surface-2);border-top-left-radius:4px;color:var(--text-soft);}
+.msg.user .msg-bubble{background:linear-gradient(135deg,var(--brand),var(--accent));border-top-right-radius:4px;color:#fff;}
+.jump-link{display:inline-block;margin-top:8px;padding:4px 10px;background:var(--brand-soft);border:1px dashed var(--brand);border-radius:6px;color:var(--brand-ink);font-size:12px;cursor:pointer;text-decoration:none;font-weight:600;}
+.chat-suggest{display:flex;gap:7px;padding:8px 16px;overflow-x:auto;flex-shrink:0;border-top:1px solid var(--border);}
+.chat-suggest::-webkit-scrollbar{display:none;}
+.suggest-chip{white-space:nowrap;padding:5px 11px;border:1px solid var(--border);border-radius:999px;font-size:12px;background:var(--surface-2);color:var(--text-soft);cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s;}
+.suggest-chip:hover{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);}
+.chat-input-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;}
+.chat-input-row input{flex:1;padding:9px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13.5px;font-family:var(--sans);outline:none;transition:border-color .2s;}
+.chat-input-row input:focus{border-color:var(--brand);}
+.chat-input-row button{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--brand);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.chat-input-row button:hover{background:var(--brand-ink);}
+.chat-disclaimer{text-align:center;font-size:10.5px;color:var(--text-muted);padding:0 14px 8px;flex-shrink:0;}
+.chat-settings{position:absolute;inset:0;background:var(--surface);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;z-index:10;transition:opacity .2s;}
+.chat-settings.hidden{opacity:0;pointer-events:none;}
+.chat-settings h3{font-size:16px;font-weight:700;}
+.settings-field label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:5px;}
+.settings-field select,.settings-field input[type="text"],.settings-field input[type="password"]{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:var(--sans);outline:none;}
+.settings-actions{display:flex;gap:8px;margin-top:auto;}
+.btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;}
+.btn-primary{background:var(--brand);color:#fff;}.btn-secondary{background:var(--surface-2);color:var(--text-soft);border:1px solid var(--border);}
+#theme-toggle,.theme-toggle-btn,#menu-toggle{background:none;border:none;cursor:pointer;font-size:18px;padding:6px;border-radius:var(--radius-sm);transition:background .15s;color:var(--text);}
+#theme-toggle:hover,.theme-toggle-btn:hover,#menu-toggle:hover{background:var(--surface-2);}
+.lang-toggle-btn{background:var(--brand-soft);border:1px solid var(--border);cursor:pointer;font-size:11px;font-weight:800;letter-spacing:.04em;padding:5px 10px;border-radius:999px;transition:all .15s;color:var(--brand-ink);font-family:var(--sans);min-width:40px;}
+.lang-toggle-btn:hover{background:var(--brand);color:#fff;border-color:var(--brand);}
+@media(max-width:1000px){
+  .sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}
+  #sidebar-overlay.open{display:block;}.topbar{display:flex;}
+  .content{margin-left:0;padding:16px 20px 40px;}
+}
+@media(max-width:520px){
+  .facts{grid-template-columns:1fr;}
+  #chat-panel{right:8px;left:8px;width:auto;bottom:80px;height:calc(100vh - 120px);}
+  .hero{padding:24px 20px;}.hero h1{font-size:26px;}
+}
+@media print{
+  .sidebar,.topbar,#chat-fab,#chat-panel,#progress-bar,#sidebar-overlay,#flow-fab,#flow-modal{display:none!important;}
+  .content{margin-left:0;padding:0;}body{background:#fff;color:#000;}
+  .card,.callout,.table-wrap{break-inside:avoid;}
+}
+
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<header class="topbar">
+  <button id="menu-toggle" aria-label="Open sidebar">☰</button>
+  <span class="topbar-title">FraudShield Guide</span>
+  <button class="lang-toggle-btn" aria-label="Toggle language" title="Switch language">EN</button>
+  <button class="theme-toggle-btn" aria-label="Toggle theme">🌙</button>
+</header>
+
+<div id="sidebar-overlay"></div>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="brand-block">
+      <div class="brand-badge">F</div>
+      <div>
+        <div class="brand-name">FraudShield</div>
+        <div class="brand-sub">Architecture Guide</div>
+      </div>
+      <button class="lang-toggle-btn" style="margin-left:auto" aria-label="Toggle language" title="Switch language">EN</button>
+      <button class="theme-toggle-btn" aria-label="Toggle theme">🌙</button>
+    </div>
+    <div class="sidebar-search">
+      <input id="toc-filter" type="text" placeholder="  Filter sections…" autocomplete="off" />
+    </div>
+    <nav class="toc" aria-label="Table of contents">
+      <span class="toc-chapter">Getting Started</span>
+      <a href="#overview"><span class="num">01</span> What FraudShield Is</a>
+      <a href="#architecture"><span class="num">02</span> The Big Picture</a>
+      <span class="toc-chapter">Formal Design (HLD)</span>
+      <a href="#hld"><span class="num">03</span> High-Level Design</a>
+      <a href="#hld-context" class="sub">3.1 Context &amp; Scope</a>
+      <a href="#hld-style" class="sub">3.2 Architectural Style</a>
+      <a href="#hld-containers" class="sub">3.3 Container View</a>
+      <a href="#hld-dataflows" class="sub">3.4 Data Flows</a>
+      <a href="#hld-nfr" class="sub">3.5 Non-Functional Reqs</a>
+      <a href="#hld-risks" class="sub">3.6 Risks &amp; Assumptions</a>
+      <span class="toc-chapter">Foundations</span>
+      <a href="#tech-stack"><span class="num">04</span> Tech Stack &amp; Why</a>
+      <a href="#service-catalog"><span class="num">05</span> Service Catalog</a>
+      <span class="toc-chapter">The 6 Services</span>
+      <a href="#svc-transaction">Transaction Service</a>
+      <a href="#svc-rules-engine">Rules Engine Service</a>
+      <a href="#svc-alerts">Alert Service</a>
+      <a href="#svc-admin">Admin API</a>
+      <a href="#svc-auth">Auth Service</a>
+      <a href="#svc-notification">Notification Worker</a>
+      <span class="toc-chapter">How It Works</span>
+      <a href="#e2e-flow"><span class="num">06</span> End-to-End Flow</a>
+      <a href="#config-model"><span class="num">07</span> Configuration Model</a>
+      <span class="toc-chapter">Quality Attributes</span>
+      <a href="#resilience">Resilience &amp; Fault Tolerance</a>
+      <a href="#security">Security</a>
+      <a href="#auth-lambda" class="sub">Auth &amp; Token Flow</a>
+      <a href="#observability">Observability</a>
+      <a href="#failures">Failure Scenarios</a>
+      <span class="toc-chapter">Operations</span>
+      <a href="#build-deploy">Build &amp; Deployment</a>
+      <span class="toc-chapter">Reference</span>
+      <a href="#glossary">Glossary</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <div class="hero">
+        <h1>🛡️ FraudShield</h1>
+        <p class="hero-tagline"><span class="i18n" data-en="Real-time, event-driven fraud detection — from raw payment event to user alert in under 200 ms." data-hi="Real-time, event-driven fraud detection — raw payment event se lekar user alert tak, sab kuch 200 ms ke andar.">Real-time, event-driven fraud detection — from raw payment event to user alert in under 200 ms.</span></p>
+        <div class="tech-pills">
+          <span class="tech-pill">Java 17</span>
+          <span class="tech-pill">Spring Boot 3.2</span>
+          <span class="tech-pill">Apache Kafka</span>
+          <span class="tech-pill">Spring Security 6</span>
+          <span class="tech-pill">JWT + Refresh Tokens</span>
+          <span class="tech-pill">Redis</span>
+          <span class="tech-pill">PostgreSQL / H2</span>
+          <span class="tech-pill">Resilience4j</span>
+          <span class="tech-pill">Docker Compose</span>
+          <span class="tech-pill">Swagger / OpenAPI 3</span>
+        </div>
+      </div>
+
+      <section id="overview">
+        <span class="section-kicker">Getting Started</span>
+        <h2>What FraudShield Is</h2>
+
+        <div class="callout tip"><span class="ico">🎯</span><div class="body"><p><strong class="i18n" data-en="In one line:" data-hi="Ek line mein:">In one line:</strong> <span class="i18n" data-en="FraudShield watches every payment as it happens, decides within milliseconds whether it looks fraudulent, and instantly warns the user if something is wrong — exactly like the fraud systems running behind banks, Stripe, PayPal, and Paytm." data-hi="FraudShield har payment ko real-time mein dekhta hai, milliseconds mein decide karta hai ki woh fraud lag raha hai ya nahi, aur agar kuch galat ho to turant user ko warn kar deta hai — bilkul waise hi jaise banks, Stripe, PayPal aur Paytm ke peeche chalne wale fraud systems kaam karte hain.">FraudShield watches every payment as it happens, decides within milliseconds whether it looks fraudulent, and instantly warns the user if something is wrong — exactly like the fraud systems running behind banks, Stripe, PayPal, and Paytm.</span></p></div></div>
+
+        <h3 class="i18n" data-en="The Problem It Solves" data-hi="Yeh Kaunsa Problem Solve Karta Hai">The Problem It Solves</h3>
+        <p><span class="i18n" data-hi="Jab aap card swipe karte ho ya pay tap karte ho, bank ke paas ek second ka chhota sa hissa hota hai decide karne ke liye ki yeh sach mein aap ho ya koi chori hua card. Agar woh slow hain to fraud nikal jaata hai aur bank ka paisa doob jaata hai. Agar zyada aggressive hain to real customers block ho jaate hain. Yeh kaam hazaaron payments per second ke scale par acche se karna financial software ke sabse mushkil problems mein se ek hai.">When you swipe a card or tap "pay," a bank has a fraction of a second to decide: <em>is this really you, or is this a stolen card?</em> If they are too slow, fraud goes through and the bank loses money. If they are too aggressive, they block real customers and everyone gets annoyed. Doing this well, at the scale of thousands of payments per second, is one of the hardest problems in financial software.</span></p>
+        <p><span class="i18n" data-hi="FraudShield ussi system ka ek working model hai. Yeh ek backend platform hai (koi real paisa involved nahi, saara data mock/fake hai) jo payment events receive karta hai, har ek ko fraud rules ke against score karta hai, aur jaise hi kuch suspicious lagta hai turant alert utha deta hai."><strong>FraudShield is a working model of that system.</strong> It is a backend platform (no real money involved — all data is mocked) that receives payment events, scores each one against a set of fraud rules, and raises an alert the moment something looks suspicious.</span></p>
+
+        <h3 class="i18n" data-en="What It Actually Does — Step by Step" data-hi="Yeh Asal Mein Karta Kya Hai — Step by Step">What It Actually Does — Step by Step</h3>
+        <p><span class="i18n" data-hi="Socho ek customer hai Priya naam ki. Jaise hi uske account par koi payment aata hai, FraudShield yeh sab karta hai:">Imagine a customer named Priya. Here is what FraudShield does the instant a payment on her account comes in:</span></p>
+        <ol class="steps">
+          <li><span class="step-num">1</span><div class="step-body"><span class="i18n" data-hi="Payment receive karta hai. Ek merchant ki app transaction bhejti hai (amount, currency, merchant, location) FraudShield ki secure API ko. Request ke saath valid login token hona zaroori hai, warna wahin reject ho jaati hai."><strong>Receives the payment.</strong> A merchant's app sends a transaction — amount, currency, merchant, location — to FraudShield's secure API. The request must carry a valid login token, or it is rejected on the spot.</span></div></li>
+          <li><span class="step-num">2</span><div class="step-body"><span class="i18n" data-hi="Fraud patterns check karta hai. Kya Priya achanak 1 minute mein 6 payments kar rahi hai? Kya yeh payment uske normal kharche se 50 guna bada hai? Kya yeh kisi aise country se aa raha hai jahaan se usne kabhi shopping nahi ki? Har suspicious signal ek fraud score mein add hota jaata hai."><strong>Checks for fraud patterns.</strong> Is Priya suddenly making 6 payments in a minute? Is this payment 50× bigger than her usual spend? Is it coming from a country she has never shopped from before? Each suspicious signal adds to a "fraud score."</span></div></li>
+          <li><span class="step-num">3</span><div class="step-body"><span class="i18n" data-hi="Decision leta hai. Agar total score threshold cross kar jaata hai to payment flag ho jaati hai. Agar nahi, to chup-chaap pass ho jaati hai. Yeh poora decision ek second ke dasve hisse se bhi kam mein hota hai."><strong>Makes a decision.</strong> If the total score crosses a threshold, the payment is <strong>flagged</strong>. If not, it passes silently. This whole decision takes under a tenth of a second.</span></div></li>
+          <li><span class="step-num">4</span><div class="step-body"><span class="i18n" data-hi="User ko alert karta hai. Agar flag hui to Priya ko turant notification milta hai: Humne aapke account par ek unusual payment dekha hai. Ek human fraud analyst bhi ise review karke decision change kar sakta hai."><strong>Alerts the user.</strong> If flagged, Priya instantly gets a notification: "We noticed an unusual payment on your account." A human fraud analyst can also review it and override the decision.</span></div></li>
+          <li><span class="step-num">5</span><div class="step-body"><span class="i18n" data-hi="Sab kuch record karta hai. Har payment, har decision, har analyst ki action log hoti hai, taaki ek complete, tamper-proof audit trail bana rahe."><strong>Records everything.</strong> Every payment, every decision, every analyst action is logged — so there is a complete, tamper-evident audit trail.</span></div></li>
+        </ol>
+
+        <h3 class="i18n" data-en="Who Uses It" data-hi="Ise Kaun Use Karta Hai">Who Uses It</h3>
+        <p><span class="i18n" data-hi="Teen tarah ke log FraudShield ke saath interact karte hain: end users (Priya jaise customers jinko alerts milte hain), payment clients (merchant apps jo transactions submit karti hain), aur fraud analysts (staff jo flagged payments review karte hain aur detection rules ko tune karte hain).">Three kinds of people interact with FraudShield: <strong>end users</strong> (customers like Priya who receive alerts), <strong>payment clients</strong> (merchant apps that submit transactions), and <strong>fraud analysts</strong> (staff who review flagged payments and tune the detection rules).</span></p>
+
+        <h3 class="i18n" data-en="Why This Project Exists" data-hi="Yeh Project Kyun Banaya Gaya">Why This Project Exists</h3>
+        <p><span class="i18n" data-hi="Yeh ek learning aur portfolio project hai. Ise jaan-boojh kar bilkul waise banaya gaya hai jaise ek real fintech platform banta hai (same architecture, same security layers, same failure-handling) taaki isse samajh aur samjhaya ja sake ki production fraud systems asal mein kaise kaam karte hain. Yeh poori tarah aapki apni machine par fake data ke saath chalta hai, isliye koi real cheez risk par nahi hai.">This is a learning and portfolio project. It is deliberately built the way a real fintech platform would be built — same architecture, same security layers, same failure-handling — so it can be used to understand and explain how production fraud systems actually work. It runs entirely on your own machine with fake data, so nothing real is at risk.</span></p>
+
+        <hr class="rule" />
+
+        <h3 class="i18n" data-en="At a Glance" data-hi="Ek Nazar Mein">At a Glance</h3>
+        <p><span class="i18n" data-hi="Yahi baat ek technical sentence mein, quick summary ke liye: FraudShield ek production-grade, event-driven fraud detection aur alerting platform hai jo payment transaction events ko ingest karta hai, unhe ek configurable multi-rule scoring engine se guzaarta hai, suspicious activity ko flag karta hai, aur users ko notify karta hai, sab kuch near real-time mein.">Here is the same thing in one technical sentence, for the quick summary: FraudShield is a production-grade, event-driven fraud detection and alerting platform that ingests payment transaction events, runs them through a configurable multi-rule scoring engine, flags suspicious activity, and notifies users — all in near real-time.</span></p>
+        <div class="card-grid">
+          <div class="card"><div class="card-ico">⚡</div><h4>Real-Time Detection</h4><p>Kafka pipeline evaluates every transaction in under 100 ms P99.</p><span class="tag">Event-Driven</span></div>
+          <div class="card"><div class="card-ico">🔐</div><h4>Multi-Layer Security</h4><p>JWT + refresh token rotation, RBAC, Redis blacklist, BCrypt passwords.</p><span class="tag">Spring Security 6</span></div>
+          <div class="card"><div class="card-ico">⚙️</div><h4>Dynamic Rules Engine</h4><p>Fraud rules stored in DB, updated without redeployment. Velocity, amount anomaly, geo-mismatch.</p><span class="tag">Live Reload</span></div>
+          <div class="card"><div class="card-ico">🔁</div><h4>Resilience Built-In</h4><p>Circuit breakers, retries, DLQ, idempotent processing — nothing is lost.</p><span class="tag">Resilience4j</span></div>
+          <div class="card"><div class="card-ico">📊</div><h4>Full Audit Trail</h4><p>Every verdict, override, and rule change logged with actor and timestamp.</p><span class="tag">Audit Log</span></div>
+          <div class="card"><div class="card-ico">🐳</div><h4>Zero-Infra Local Dev</h4><p>H2 in-memory DB, mock data seeded on startup. One command to run.</p><span class="tag">Docker Compose</span></div>
+        </div>
+        <div class="callout info"><span class="ico">💡</span><div class="body"><p><strong>Why was FraudShield built?</strong> To demonstrate that a developer understands not just <em>how</em> to write code, but <em>why</em> specific architectural choices are made — and what happens when things go wrong. Every decision here has a documented reason.</p></div></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="architecture">
+        <span class="section-kicker">Getting Started</span>
+        <h2>The Big Picture</h2>
+        <p>Six Spring Boot microservices communicate through Apache Kafka and REST. The Transaction Service is the only public entry point. Everything else is internal. Redis underpins two cross-cutting concerns: sliding-window fraud counters and JWT token revocation.</p>
+        <div class="diagram"><figure>
+          <div class="mermaid" data-src="graph TB&#10;  Client([Payment Client]):::ext&#10;  TS[Transaction Svc :8081]:::svc&#10;  RE[Rules Engine :8082]:::svc&#10;  AS[Alert Svc :8083]:::svc&#10;  AUTH[Auth Svc :8085]:::svc&#10;  NW[Notification Worker :8086]:::svc&#10;  KAFKA[(Apache Kafka)]:::inf&#10;  REDIS[(Redis)]:::inf&#10;  PG[(PostgreSQL)]:::inf&#10;  Client --> TS&#10;  TS --> KAFKA&#10;  KAFKA --> RE&#10;  RE --> KAFKA&#10;  KAFKA --> AS&#10;  AS --> KAFKA&#10;  KAFKA --> NW&#10;  AUTH --- REDIS&#10;  RE --- REDIS&#10;  RE --- PG&#10;  AUTH --- PG&#10;  classDef ext fill:#e7f0ff,stroke:#0b5fff,color:#0a3fb0&#10;  classDef svc fill:#e6f9f5,stroke:#00a98f,color:#007a67&#10;  classDef inf fill:#f0f2f5,stroke:#7a8595,color:#4b5563">
+graph TB
+  Client([Payment Client]) --> TS[Transaction Svc :8081]
+  TS --> KAFKA[(Apache Kafka)]
+  KAFKA --> RE[Rules Engine :8082]
+          </div>
+          <div class="diagram-fallback">System Context (C4-L1):
+  [Payment Client] -> POST /api/transactions -> [Transaction Service :8081]
+  -> raw-transactions -> [Kafka] -> [Rules Engine :8082]
+  -> fraud-verdicts -> [Kafka] -> [Alert Service :8083]
+  -> alert-notifications -> [Kafka] -> [Notification Worker :8086]
+  [Auth Service :8085] &lt;-&gt; [Redis] (blacklist); [Rules Engine] &lt;-&gt; [Redis] (sliding window)</div>
+          <figcaption>Figure 1 — System Context (C4-L1). Six services over Kafka, backed by Redis + PostgreSQL.</figcaption>
+        </figure></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="hld">
+        <span class="section-kicker">Formal Design</span>
+        <h2>High-Level Design</h2>
+        <p>The formal architectural decisions, trade-offs, and constraints — the document an architect produces before a line of code is written, and the one an MNC interviewer expects you to draw on a whiteboard.</p>
+
+        <h3 id="hld-context">3.1 Context &amp; Scope</h3>
+        <p>FraudShield sits between payment processors and end-users. It does <strong>not</strong> process payments — it observes them and reacts.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Actor</th><th>Role</th><th>Interface</th></tr></thead>
+          <tbody>
+            <tr><td>Payment Client</td><td>Submits transaction events</td><td>POST /api/transactions + JWT</td></tr>
+            <tr><td>End User</td><td>Receives alerts, views history</td><td>GET /api/alerts + JWT</td></tr>
+            <tr><td>Fraud Analyst</td><td>Reviews flags, tunes rules</td><td>Admin API + ROLE_ANALYST</td></tr>
+            <tr><td>System Admin</td><td>Manages users, roles</td><td>Admin API + ROLE_ADMIN</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warn"><span class="ico">⚠️</span><div class="body"><p><strong>Out of scope:</strong> Payment processing, chargebacks. Card data is never stored — only transaction metadata.</p></div></div>
+
+        <h3 id="hld-style">3.2 Architectural Style</h3>
+        <p><strong>Event-Driven Microservices with CQRS.</strong> Each service owns its data, communicates asynchronously via Kafka, scales independently.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Decision</th><th>Choice</th><th>Rejected</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Inter-service comms</td><td>Kafka (async)</td><td>REST chains</td><td>Decoupling, replay, backpressure. Rules Engine down → queue, no loss.</td></tr>
+            <tr><td>Read/write split</td><td>CQRS</td><td>Shared model</td><td>Ingestion and dashboards have different scaling needs.</td></tr>
+            <tr><td>Service boundaries</td><td>Per-capability (6)</td><td>Monolith</td><td>Rules Engine needs 6× more instances than Admin API.</td></tr>
+            <tr><td>Authentication</td><td>JWT + Refresh</td><td>Server sessions</td><td>Stateless → horizontal scaling, zero shared state.</td></tr>
+            <tr><td>Velocity tracking</td><td>Redis sliding window</td><td>SQL COUNT</td><td>Sub-ms vs ~5ms. At 50k TPS the gap is enormous.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 id="hld-containers">3.3 Container View (C4-L2)</h3>
+        <div class="diagram"><figure>
+          <div class="mermaid" data-src="graph LR&#10;  TS[Transaction Svc :8081] --> K1[raw-transactions]&#10;  K1 --> RE[Rules Engine :8082]&#10;  RE --> K2[fraud-verdicts]&#10;  K2 --> AS[Alert Svc :8083]&#10;  AS --> K3[alert-notifications]&#10;  K3 --> NW[Notification Worker :8086]&#10;  AU[Auth Svc :8085] --- RD[(Redis)]&#10;  RE --- RD&#10;  RE --- PG[(PostgreSQL)]">
+graph LR
+  TS[Transaction Svc :8081] --> K1[raw-transactions]
+  K1 --> RE[Rules Engine :8082]
+  RE --> K2[fraud-verdicts]
+          </div>
+          <div class="diagram-fallback">Container View: Client -> App Layer via REST + JWT.
+  Kafka topics: raw-transactions, fraud-verdicts, alert-notifications, *.DLT
+  Data: PostgreSQL (all), Redis (blacklist + sliding window), H2 (dev)</div>
+          <figcaption>Figure 2 — Container View (C4-L2).</figcaption>
+        </figure></div>
+
+        <h3 id="hld-dataflows">3.4 Data Flows</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Topic</th><th>Producer</th><th>Consumer</th><th>Partitions</th><th>Retention</th></tr></thead>
+          <tbody>
+            <tr><td><code>raw-transactions</code></td><td>Transaction Svc</td><td>Rules Engine</td><td>6 / 1 dev</td><td>7 days</td></tr>
+            <tr><td><code>fraud-verdicts</code></td><td>Rules Engine</td><td>Alert, Admin</td><td>6 / 1 dev</td><td>7 days</td></tr>
+            <tr><td><code>alert-notifications</code></td><td>Alert Svc</td><td>Notification</td><td>3 / 1 dev</td><td>3 days</td></tr>
+            <tr><td><code>raw-transactions.DLT</code></td><td>Spring Kafka</td><td>Ops team</td><td>1</td><td>30 days</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout tip"><span class="ico">💡</span><div class="body"><p><strong>Interview point:</strong> Kafka partitions cap consumer parallelism. 6 partitions + 6 instances = 1 each. A 7th sits idle — Kafka won't split a partition.</p></div></div>
+
+        <h3 id="hld-nfr">3.5 Non-Functional Requirements</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Attribute</th><th>Target</th><th>How Achieved</th></tr></thead>
+          <tbody>
+            <tr><td>Fraud eval latency</td><td>P99 &lt; 100 ms</td><td>Redis counters, dedicated thread pool</td></tr>
+            <tr><td>Throughput</td><td>50,000 TPS</td><td>Horizontal Rules Engine, 6 partitions</td></tr>
+            <tr><td>Availability</td><td>99.9%</td><td>Circuit breakers, DLQ, no SPOF</td></tr>
+            <tr><td>Durability</td><td>Zero loss</td><td>Kafka 7d, PostgreSQL WAL, Redis AOF</td></tr>
+            <tr><td>Auth latency</td><td>&lt; 5 ms</td><td>Stateless JWT, only Redis blacklist lookup</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3 id="hld-risks">3.6 Risks &amp; Assumptions</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr><td>Kafka lag spike</td><td><span class="chip warn">HIGH</span></td><td>HPA scales Rules Engine on lag</td></tr>
+            <tr><td>Redis unavailable</td><td><span class="chip warn">MED</span></td><td>Velocity falls back to DB; blacklist fails open</td></tr>
+            <tr><td>Duplicate Kafka delivery</td><td><span class="chip err">CRIT</span></td><td>Idempotency key in Redis, 24h TTL</td></tr>
+            <tr><td>PostgreSQL failure</td><td><span class="chip err">CRIT</span></td><td>Patroni failover to standby</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="tech-stack">
+        <span class="section-kicker">Foundations</span>
+        <h2>Tech Stack &amp; Why</h2>
+        <p>Every technology was chosen for a specific reason. Articulating these decisions separates a good developer from a great one in an interview.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Technology</th><th>Role</th><th>Why this, not X</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Java 17 LTS</strong></td><td>Language</td><td>Records, sealed classes, pattern matching, long support.</td></tr>
+            <tr><td><strong>Spring Boot 3.2</strong></td><td>Framework</td><td>Auto-config, embedded Tomcat, actuators.</td></tr>
+            <tr><td><strong>Spring Security 6</strong></td><td>Auth &amp; RBAC</td><td>Industry standard. Never roll your own auth.</td></tr>
+            <tr><td><strong>Apache Kafka</strong></td><td>Event streaming</td><td>Retention + replay, consumer groups. RabbitMQ deletes on ACK.</td></tr>
+            <tr><td><strong>Redis 7</strong></td><td>Windows + blacklist</td><td>Sub-ms ZADD, TTL, shared across instances.</td></tr>
+            <tr><td><strong>PostgreSQL 16</strong></td><td>Store</td><td>ACID, JSON columns, JPA integration.</td></tr>
+            <tr><td><strong>JWT (jjwt)</strong></td><td>Stateless tokens</td><td>No DB lookup per request → linear scaling.</td></tr>
+            <tr><td><strong>Resilience4j</strong></td><td>Circuit breaker</td><td>Pure Java, Spring native. Hystrix deprecated.</td></tr>
+            <tr><td><strong>Docker Compose</strong></td><td>Local orchestration</td><td>One command starts all 9 containers.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="service-catalog">
+        <span class="section-kicker">Foundations</span>
+        <h2>Service Catalog</h2>
+        <div class="card-grid">
+          <div class="card"><div class="card-ico">📥</div><h4>Transaction Service</h4><p>REST entry point. Validates, persists, publishes to Kafka.</p><span class="tag">:8081</span></div>
+          <div class="card"><div class="card-ico">🧠</div><h4>Rules Engine</h4><p>Stateful Kafka consumer. Scores against velocity, amount, geo.</p><span class="tag">:8082</span></div>
+          <div class="card"><div class="card-ico">🔔</div><h4>Alert Service</h4><p>Consumes verdicts. Creates alerts, triggers notifications.</p><span class="tag">:8083</span></div>
+          <div class="card"><div class="card-ico">🕵️</div><h4>Admin API</h4><p>Control plane. Rule management, overrides, audit logs.</p><span class="tag">:8084</span></div>
+          <div class="card"><div class="card-ico">🔑</div><h4>Auth Service</h4><p>JWT issuance, refresh rotation, Redis blacklist.</p><span class="tag">:8085</span></div>
+          <div class="card"><div class="card-ico">📨</div><h4>Notification Worker</h4><p>Sends email/SMS (mocked in dev). Idempotent + DLQ.</p><span class="tag">:8086</span></div>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="svc-transaction">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>Transaction Service</h2>
+        <p>The sole public-facing entry point. Receives raw payment events, validates them, persists to PostgreSQL, and publishes to <code>raw-transactions</code>. The JWT filter rejects unauthenticated calls before the controller. It does not evaluate fraud — its single responsibility is reliable, at-least-once delivery to the message bus.</p>
+        <dl class="facts">
+          <dt>Port</dt><dd>8081</dd>
+          <dt>Base Path</dt><dd><code>/api/transactions</code></dd>
+          <dt>Auth</dt><dd>Bearer JWT (ROLE_USER+)</dd>
+          <dt>Publishes</dt><dd><code>raw-transactions</code></dd>
+          <dt>Depends on</dt><dd>Auth Svc, Kafka, PostgreSQL</dd>
+          <dt>Scaling</dt><dd>3 replicas, CPU HPA</dd>
+        </dl>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Endpoint</th><th>Method</th><th>Response</th></tr></thead>
+          <tbody>
+            <tr><td>/api/transactions</td><td>POST</td><td>202 Accepted — queued</td></tr>
+            <tr><td>/api/transactions/{id}</td><td>GET</td><td>200 OK — details + verdict</td></tr>
+            <tr><td>/api/transactions/my</td><td>GET</td><td>200 OK — paginated own list</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="svc-rules-engine">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>Rules Engine Service</h2>
+        <p>The analytical core. Consumes <code>raw-transactions</code>, evaluates each against active rules from PostgreSQL, computes a composite score, persists the verdict, and publishes to <code>fraud-verdicts</code>. Rules refresh every 60 seconds — no restart to change thresholds. The velocity check uses a Redis Sorted Set as a sliding-window counter.</p>
+        <dl class="facts">
+          <dt>Port</dt><dd>8082 (internal)</dd>
+          <dt>Consumes</dt><dd><code>raw-transactions</code></dd>
+          <dt>Publishes</dt><dd><code>fraud-verdicts</code></dd>
+          <dt>Idempotency</dt><dd>Redis <code>processed:{txId}</code> 24h TTL</dd>
+          <dt>Scaling</dt><dd>HPA on Kafka lag &gt; 1000</dd>
+        </dl>
+        <h3>Velocity Check — Redis Sliding Window</h3>
+        <pre><code>ZADD velocity:{userId} {epochMs} {txId}
+ZREMRANGEBYSCORE velocity:{userId} 0 {epochMs - 60000}
+count = ZCARD velocity:{userId}
+EXPIRE velocity:{userId} 60
+if (count &gt; 5) score += 40;</code></pre>
+        <div class="callout info"><span class="ico">💡</span><div class="body"><p><strong>Why a sorted set, not INCR?</strong> A fixed window resets at boundaries — an attacker could send 5 txns at 11:59:59 and 5 more at 12:00:01 and never trigger. Sorted sets give a true sliding window.</p></div></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Rule</th><th>Backend</th><th>Threshold</th><th>Weight</th></tr></thead>
+          <tbody>
+            <tr><td>Velocity Check</td><td>Redis ZADD</td><td>&gt; 5 / 60s</td><td>40</td></tr>
+            <tr><td>Amount Anomaly</td><td>PostgreSQL avg</td><td>&gt; 3× 30-day avg</td><td>30</td></tr>
+            <tr><td>Geo-Mismatch</td><td>PostgreSQL</td><td>Different country</td><td>20</td></tr>
+            <tr><td>Duplicate</td><td>Redis</td><td>Same amt+merchant / 10s</td><td>10</td></tr>
+            <tr><td><strong>Flag threshold</strong></td><td colspan="2">Score ≥ 50 → FLAGGED</td><td>—</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="svc-alerts">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>Alert Service</h2>
+        <p>Bridges the fraud pipeline and the end user. Consumes <code>fraud-verdicts</code>, persists an alert for every FLAGGED verdict, and publishes to <code>alert-notifications</code>. Users can fetch only their own alerts — the query is scoped to the JWT subject.</p>
+        <dl class="facts">
+          <dt>Port</dt><dd>8083</dd>
+          <dt>Consumes</dt><dd><code>fraud-verdicts</code></dd>
+          <dt>Publishes</dt><dd><code>alert-notifications</code></dd>
+          <dt>States</dt><dd>PENDING → SENT → ACKNOWLEDGED</dd>
+          <dt>Resilience</dt><dd>Circuit breaker on notify publish</dd>
+        </dl>
+      </section>
+
+      <section id="svc-admin">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>Admin API</h2>
+        <p>The control plane for analysts. View flagged transactions with dynamic filtering, override verdicts, manage rules without redeployment, inspect the audit log. Every write is captured as an immutable audit event. Uses JPA Specifications for dynamic query filtering.</p>
+        <dl class="facts">
+          <dt>Port</dt><dd>8084</dd>
+          <dt>Auth</dt><dd>ROLE_ANALYST / ROLE_ADMIN</dd>
+          <dt>Owns</dt><dd>fraud_rules, audit_logs</dd>
+          <dt>Rate Limit</dt><dd>100 req / 10s per user</dd>
+        </dl>
+        <div class="callout warn"><span class="ico">⚠️</span><div class="body"><p><strong>Security note:</strong> Every <code>/api/admin/**</code> endpoint requires ROLE_ANALYST or ROLE_ADMIN. A ROLE_USER gets <strong>403 Forbidden</strong> — not 401. 401 = "who are you?", 403 = "I know who you are, and the answer is no."</p></div></div>
+      </section>
+
+      <section id="svc-auth">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>Auth Service</h2>
+        <p>The identity backbone — the only service that issues tokens. Manages users, roles, password hashing, JWT generation, refresh rotation, and logout via Redis blacklisting. Other services validate JWTs locally without calling back; only the blacklist check hits shared storage.</p>
+        <dl class="facts">
+          <dt>Port</dt><dd>8085</dd>
+          <dt>Access Token TTL</dt><dd>15 minutes</dd>
+          <dt>Refresh Token TTL</dt><dd>7 days (hashed in DB)</dd>
+          <dt>Password hashing</dt><dd>BCrypt cost 12</dd>
+          <dt>Token signing</dt><dd>HMAC-SHA256, 256-bit key</dd>
+          <dt>Roles</dt><dd>USER, ANALYST, ADMIN, SUPER_ADMIN</dd>
+        </dl>
+        <div class="callout tip"><span class="ico">💡</span><div class="body"><p><strong>Why 15 min for the access token?</strong> If a JWT is stolen, the attacker can use it until it expires. 15 minutes limits the blast radius. The client silently refreshes, so the user never notices.</p></div></div>
+        <div class="callout tip"><span class="ico">💡</span><div class="body"><p><strong>Why store refresh tokens hashed?</strong> Same reason as passwords. If the DB is breached, the attacker cannot use the hashes to issue new JWT pairs. The raw token travels only over HTTPS.</p></div></div>
+      </section>
+
+      <section id="svc-notification">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>Notification Worker</h2>
+        <p>Consumes <code>alert-notifications</code> and dispatches email/SMS. In dev all dispatches are mocked — logged to console with simulated latency. Idempotent: a notification ID is stored in Redis after successful dispatch. After 3 failed retries, messages go to <code>alert-notifications.DLT</code>.</p>
+        <dl class="facts">
+          <dt>Port</dt><dd>8086 (internal)</dd>
+          <dt>Consumes</dt><dd><code>alert-notifications</code></dd>
+          <dt>Dead Letter</dt><dd><code>alert-notifications.DLT</code></dd>
+          <dt>Retry</dt><dd>3 attempts, backoff 1s/2s/4s</dd>
+          <dt>Prod</dt><dd>SendGrid (email), Twilio (SMS)</dd>
+        </dl>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="e2e-flow">
+        <span class="section-kicker">How It Works</span>
+        <h2>End-to-End Request Flow</h2>
+        <p>Traces a single flagged transaction from the client's HTTP call to the user's email alert. This is what an interviewer expects when they ask "walk me through your system."</p>
+        <div class="diagram"><figure>
+          <div class="mermaid" data-src="sequenceDiagram&#10;  participant C as Client&#10;  participant TS as Transaction Svc&#10;  participant RE as Rules Engine&#10;  participant RD as Redis&#10;  participant AS as Alert Svc&#10;  participant U as User&#10;  C->>TS: POST /api/transactions (JWT)&#10;  TS->>RE: Kafka raw-transactions&#10;  RE->>RD: ZADD velocity + ZCARD&#10;  RD-->>RE: count=6 FLAGGED&#10;  RE->>AS: Kafka fraud-verdicts&#10;  AS->>U: alert + mock email">
+sequenceDiagram
+  C->>TS: POST /api/transactions (JWT)
+  TS->>RE: Kafka raw-transactions
+  RE->>AS: Kafka fraud-verdicts
+  AS->>U: alert + mock email
+          </div>
+          <div class="diagram-fallback">1. Client POST + JWT -> Transaction Svc -> 202 Accepted
+2. Kafka raw-transactions -> Rules Engine
+3. Rules Engine -> Redis velocity check -> FLAGGED (score=70)
+4. Kafka fraud-verdicts -> Alert Service -> create alert
+5. Kafka alert-notifications -> Notification Worker -> mock email
+Total: ~150ms end-to-end</div>
+          <figcaption>Figure 6 — End-to-end sequence for a flagged transaction.</figcaption>
+        </figure></div>
+        <ol class="steps">
+          <li><span class="step-num">1</span><div class="step-body"><strong>Client Authentication:</strong> POST with Bearer JWT. Filter validates signature, expiry, Redis blacklist. 401 on failure.</div></li>
+          <li><span class="step-num">2</span><div class="step-body"><strong>Payload Validation:</strong> Bean Validation checks fields. 400 with field errors on failure.</div></li>
+          <li><span class="step-num">3</span><div class="step-body"><strong>Persist + Publish:</strong> Saved to PostgreSQL, published to Kafka. 202 returned after Kafka ACK.</div></li>
+          <li><span class="step-num">4</span><div class="step-body"><strong>Rules Evaluation:</strong> Redis sliding window finds 6 txns/60s. Score = 70 → FLAGGED.</div></li>
+          <li><span class="step-num">5</span><div class="step-body"><strong>Alert Creation:</strong> Alert Service creates alert, publishes to alert-notifications.</div></li>
+          <li><span class="step-num">6</span><div class="step-body"><strong>User Notification:</strong> Worker checks idempotency key, sends mock email.</div></li>
+        </ol>
+      </section>
+
+      <section id="config-model">
+        <span class="section-kicker">How It Works</span>
+        <h2>Configuration Model</h2>
+        <p>Follows 12-Factor App principles: every environment-specific value is externalized. No secrets in code — only Spring profiles and environment variables.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Variable</th><th>Default (dev)</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>JWT_SECRET</code></td><td>dev-secret-256bit</td><td>≥ 256 bits. Prod: Kubernetes Secret.</td></tr>
+            <tr><td><code>JWT_EXPIRY_MS</code></td><td>900000</td><td>Access token TTL (15 min)</td></tr>
+            <tr><td><code>REFRESH_TOKEN_EXPIRY_DAYS</code></td><td>7</td><td>Refresh token TTL</td></tr>
+            <tr><td><code>KAFKA_BOOTSTRAP_SERVERS</code></td><td>localhost:9092</td><td>Compose: kafka:9092</td></tr>
+            <tr><td><code>REDIS_HOST</code></td><td>localhost</td><td>Compose: redis</td></tr>
+            <tr><td><code>FRAUD_SCORE_THRESHOLD</code></td><td>50</td><td>Min score to flag</td></tr>
+            <tr><td><code>VELOCITY_MAX_COUNT</code></td><td>5</td><td>Max txns per window</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout danger"><span class="ico">🚨</span><div class="body"><p><strong>Never hardcode secrets.</strong> In production, JWT_SECRET must come from a secrets manager. A hardcoded secret is a critical OWASP vulnerability.</p></div></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="resilience">
+        <span class="section-kicker">Quality Attributes</span>
+        <h2>Resilience &amp; Fault Tolerance</h2>
+        <p>FraudShield treats failures as normal. Every integration point is wrapped with a Resilience4j pattern. The goal is graceful degradation.</p>
+        <div class="diagram"><figure>
+          <div class="mermaid" data-src="stateDiagram-v2&#10;  [*] --> CLOSED&#10;  CLOSED --> OPEN: failure > 50% / 10 calls&#10;  OPEN --> HALF_OPEN: after 30s&#10;  HALF_OPEN --> CLOSED: probe succeeds&#10;  HALF_OPEN --> OPEN: probe fails">
+stateDiagram-v2
+  [*] --> CLOSED
+  CLOSED --> OPEN: failure > 50%
+  OPEN --> HALF_OPEN: after 30s
+  HALF_OPEN --> CLOSED: probe succeeds
+          </div>
+          <div class="diagram-fallback">Circuit Breaker: CLOSED -> OPEN (50% failure / 10 calls) -> HALF_OPEN (after 30s) -> CLOSED or OPEN</div>
+          <figcaption>Figure 7 — Circuit breaker state machine.</figcaption>
+        </figure></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Pattern</th><th>Applied On</th><th>Config</th><th>Fallback</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip info">Circuit Breaker</span></td><td>Alert → Notify</td><td>50% / 10 calls; 30s</td><td>Alert stays PENDING</td></tr>
+            <tr><td><span class="chip info">Retry</span></td><td>Rules → Kafka</td><td>3 attempts, 1/2/4s</td><td>Message to DLT</td></tr>
+            <tr><td><span class="chip info">Rate Limiter</span></td><td>Admin API</td><td>100 req / 10s</td><td>429 + Retry-After</td></tr>
+            <tr><td><span class="chip info">Bulkhead</span></td><td>Rules eval</td><td>Max 50 concurrent</td><td>503</td></tr>
+            <tr><td><span class="chip info">DLQ</span></td><td>All consumers</td><td>After 3 retries</td><td>Manual review, no loss</td></tr>
+            <tr><td><span class="chip info">Idempotency</span></td><td>Rules, Notify</td><td>Redis key, 24-48h</td><td>Duplicates skipped</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="security">
+        <span class="section-kicker">Quality Attributes</span>
+        <h2>Security</h2>
+        <p>Five layers. Bypassing one alone is not enough — defence in depth.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Layer</th><th>Mechanism</th><th>OWASP</th></tr></thead>
+          <tbody>
+            <tr><td><strong>L1 Transport</strong></td><td>HTTPS / TLS 1.3</td><td>A02 Crypto Failures</td></tr>
+            <tr><td><strong>L2 Authentication</strong></td><td>JWT Bearer, Redis blacklist</td><td>A07 Auth Failures</td></tr>
+            <tr><td><strong>L3 Authorization</strong></td><td>RBAC (URL + @PreAuthorize)</td><td>A01 Broken Access Control</td></tr>
+            <tr><td><strong>L4 Validation</strong></td><td>Bean Validation on DTOs</td><td>A03 Injection</td></tr>
+            <tr><td><strong>L5 Data</strong></td><td>BCrypt, hashed tokens, masked logs</td><td>A02, A09</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Handling an Unauthenticated Request</h3>
+        <ol class="steps">
+          <li><span class="step-num">1</span><div class="step-body">Request arrives. JwtAuthenticationFilter runs before the controller.</div></li>
+          <li><span class="step-num">2</span><div class="step-body">Filter checks for Bearer token. Absent → SecurityContext anonymous.</div></li>
+          <li><span class="step-num">3</span><div class="step-body">Token validation: signature, expiry, Redis blacklist. Any failure → anonymous.</div></li>
+          <li><span class="step-num">4</span><div class="step-body">Spring Security evaluates the route. Public routes pass; protected require auth.</div></li>
+          <li><span class="step-num">5</span><div class="step-body"><strong>401 Unauthorized</strong> returned as structured JSON — no stack trace. Source IP logged.</div></li>
+        </ol>
+        <div class="callout info"><span class="ico">🔐</span><div class="body"><p><strong>401 vs 403:</strong> 401 = "not authenticated." 403 = "authenticated, no permission." FraudShield returns 401 for invalid tokens, 403 for insufficient roles.</p></div></div>
+
+        <h3 id="auth-lambda">Auth &amp; Token Flow (Three Layers)</h3>
+        <div class="diagram"><figure>
+          <div class="mermaid" data-src="sequenceDiagram&#10;  participant C as Client&#10;  participant AS as Auth Svc&#10;  participant RD as Redis&#10;  C->>AS: POST /login {email,password}&#10;  AS->>AS: BCrypt.matches&#10;  AS-->>C: accessToken + refreshToken&#10;  C->>AS: GET /resource + Bearer&#10;  AS->>RD: GET blacklist:jti&#10;  AS-->>C: 200 OK&#10;  C->>AS: POST /logout&#10;  AS->>RD: SET blacklist:jti EX ttl&#10;  AS-->>C: 204">
+sequenceDiagram
+  C->>AS: POST /login
+  AS->>AS: BCrypt.matches
+  AS-->>C: accessToken + refreshToken
+  C->>AS: GET /resource + Bearer
+  AS->>RD: GET blacklist:jti
+          </div>
+          <div class="diagram-fallback">Layer 1 Login: credentials -> BCrypt -> JWT(15min) + RefreshToken(7d hashed)
+Layer 2 Request: JWT -> sig + expiry + Redis blacklist -> SecurityContext
+Layer 3 Logout: JWT -> Redis SET blacklist:jti EX ttl -> delete refresh token</div>
+          <figcaption>Figure 8 — Three-layer auth: login, request, logout with revocation.</figcaption>
+        </figure></div>
+        <h3>Token Refresh Flow</h3>
+        <pre><code>POST /api/auth/refresh { "refreshToken": "UUID" }
+Server:
+  1. Hash incoming token (SHA-256)
+  2. Look up hash in PostgreSQL
+  3. Check: not expired, not already used
+  4. DELETE old refresh token (rotation — single use)
+  5. Issue new JWT (15 min) + new refresh token (7 days)
+  6. Invalid → 401, client must re-login</code></pre>
+        <div class="callout warn"><span class="ico">⚠️</span><div class="body"><p><strong>Why single-use refresh tokens?</strong> If stolen and used by an attacker, the legitimate client's next refresh fails (already consumed) — alerting the system to theft. Both parties are forced to re-login.</p></div></div>
+      </section>
+
+      <section id="observability">
+        <span class="section-kicker">Quality Attributes</span>
+        <h2>Observability</h2>
+        <p>The three pillars — logs, metrics, traces — are all implemented. In dev everything goes to the console as structured JSON.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Pillar</th><th>Technology</th><th>Key Data</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Logging</strong></td><td>SLF4J + Logback (JSON)</td><td>Correlation ID, userId, traceId. Sensitive data masked.</td></tr>
+            <tr><td><strong>Metrics</strong></td><td>Micrometer + Actuator</td><td>transactions.total, fraud.rate, rules.eval.time, Kafka lag</td></tr>
+            <tr><td><strong>Tracing</strong></td><td>Sleuth + Zipkin</td><td>traceId propagated via HTTP + Kafka headers across 6 services</td></tr>
+            <tr><td><strong>Health</strong></td><td>/actuator/health</td><td>DB, Kafka, Redis connectivity</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout info"><span class="ico">💡</span><div class="body"><p><strong>Correlation ID:</strong> Every request gets a UUID added to the MDC, so every log line carries it — across all services including Kafka processing. Tracing one transaction through 6 services becomes trivial.</p></div></div>
+      </section>
+
+      <section id="failures">
+        <span class="section-kicker">Quality Attributes</span>
+        <h2>Failure Scenarios</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Scenario</th><th>Impact</th><th>Behaviour</th><th>Recovery</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Kafka down</strong></td><td><span class="chip warn">DEGRADED</span></td><td>Transaction Svc buffers, 503 after full. Rules Engine pauses.</td><td>Auto on restart. No loss.</td></tr>
+            <tr><td><strong>Redis down</strong></td><td><span class="chip warn">DEGRADED</span></td><td>Velocity falls back to DB. Blacklist fails open (logged).</td><td>Auto reconnect.</td></tr>
+            <tr><td><strong>Rules Engine down</strong></td><td><span class="chip warn">DEGRADED</span></td><td>Transactions accumulate in Kafka (7d).</td><td>Processes backlog in order.</td></tr>
+            <tr><td><strong>PostgreSQL down</strong></td><td><span class="chip err">CRITICAL</span></td><td>DB-dependent services return 503.</td><td>Patroni failover.</td></tr>
+            <tr><td><strong>Duplicate delivery</strong></td><td><span class="chip ok">HANDLED</span></td><td>Idempotency key check. Skipped.</td><td>Inline.</td></tr>
+            <tr><td><strong>Stolen JWT</strong></td><td><span class="chip warn">RISK</span></td><td>Usable up to 15 min. Logout blacklists it.</td><td>Short TTL limits window.</td></tr>
+            <tr><td><strong>Invalid JWT</strong></td><td><span class="chip ok">HANDLED</span></td><td>401 immediately. IP logged. Rate limited.</td><td>Inline.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="build-deploy">
+        <span class="section-kicker">Operations</span>
+        <h2>Build &amp; Deployment</h2>
+        <h3>Prerequisites</h3>
+        <ul>
+          <li>Java 17+ (<code>java -version</code>)</li>
+          <li>Maven 3.9+ (<code>mvn -version</code>)</li>
+          <li>Docker Desktop (for full-stack mode)</li>
+        </ul>
+        <h3>Option 1 — Mock Mode (Zero Infrastructure)</h3>
+        <pre><code>cd auth-service
+mvn spring-boot:run -Dspring-boot.run.profiles=default
+# Swagger UI: http://localhost:8085/swagger-ui.html
+# H2 Console: http://localhost:8085/h2-console (jdbc:h2:mem:fraudshielddb, sa, blank)</code></pre>
+        <h3>Option 2 — Full Stack (Docker Compose)</h3>
+        <pre><code>docker-compose up --build
+# All 9 containers: Kafka, Zookeeper, Redis, PostgreSQL + 6 services
+# Auth: http://localhost:8085/swagger-ui.html</code></pre>
+        <h3>Pre-seeded Accounts (Mock Data)</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Email</th><th>Password</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td><code>superadmin@fraudshield.io</code></td><td><code>SuperAdmin@123</code></td><td>ROLE_SUPER_ADMIN</td></tr>
+            <tr><td><code>admin@fraudshield.io</code></td><td><code>Admin@123</code></td><td>ROLE_ADMIN</td></tr>
+            <tr><td><code>analyst@fraudshield.io</code></td><td><code>Analyst@123</code></td><td>ROLE_ANALYST</td></tr>
+            <tr><td><code>user@fraudshield.io</code></td><td><code>User@123</code></td><td>ROLE_USER</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Quick API Test</h3>
+        <pre><code># 1. Login
+curl -X POST http://localhost:8085/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@fraudshield.io","password":"User@123"}'
+
+# 2. Submit a transaction (use token from step 1)
+curl -X POST http://localhost:8081/api/transactions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"amount":9999.99,"currency":"USD","merchantId":"MERCH-001"}'
+
+# 3. Check alerts
+curl http://localhost:8083/api/alerts -H "Authorization: Bearer $TOKEN"</code></pre>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="glossary">
+        <span class="section-kicker">Reference</span>
+        <h2>Glossary</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+          <tbody>
+            <tr><td><strong>JWT</strong></td><td>Stateless, signed token carrying claims. No DB lookup to validate — just verify the signature.</td></tr>
+            <tr><td><strong>Refresh Token</strong></td><td>Long-lived single-use token (hashed in DB) to obtain new JWT pairs without re-login.</td></tr>
+            <tr><td><strong>Token Rotation</strong></td><td>Each refresh invalidates the old token and issues a new pair.</td></tr>
+            <tr><td><strong>Token Blacklist</strong></td><td>Redis set of revoked JWT IDs (jti) with TTL. Honours logouts before natural expiry.</td></tr>
+            <tr><td><strong>Kafka Topic</strong></td><td>Named, ordered, append-only log of events. Producers write; consumer groups read.</td></tr>
+            <tr><td><strong>Consumer Group</strong></td><td>Consumers sharing a group ID. Kafka distributes partitions — one per consumer max.</td></tr>
+            <tr><td><strong>Dead Letter Topic</strong></td><td>Topic for messages that failed processing after all retries.</td></tr>
+            <tr><td><strong>Idempotency</strong></td><td>An operation producing the same result no matter how many times applied.</td></tr>
+            <tr><td><strong>Sliding Window</strong></td><td>Time-based counter over a rolling period. More accurate than a fixed window.</td></tr>
+            <tr><td><strong>RBAC</strong></td><td>Role-Based Access Control. Permissions on roles; roles on users.</td></tr>
+            <tr><td><strong>Circuit Breaker</strong></td><td>Stops calling a failing service, lets it recover, resumes once confirmed.</td></tr>
+            <tr><td><strong>CQRS</strong></td><td>Command Query Responsibility Segregation. Separates write from read models.</td></tr>
+            <tr><td><strong>BCrypt</strong></td><td>Password hashing with a cost factor. Cost 12 ≈ 250ms per hash.</td></tr>
+            <tr><td><strong>HPA</strong></td><td>Kubernetes Horizontal Pod Autoscaler. Scales on CPU or custom metrics.</td></tr>
+            <tr><td><strong>jti</strong></td><td>JWT ID claim. Unique per token. Used as the Redis blacklist key.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="faq">
+        <span class="section-kicker">Reference</span>
+        <h2>FAQ</h2>
+        <h3>Why JWT and not server-side sessions?</h3>
+        <p>Sessions require a shared store and a DB lookup per request. JWT is stateless — the server only needs the secret key. You can scale to 100 instances with no shared auth state. The only shared state we add back is the Redis blacklist, a conscious tradeoff for logout support.</p>
+        <h3>Why Kafka over RabbitMQ or REST calls?</h3>
+        <p>Retention and replay. Kafka keeps messages 7 days regardless of consumption. If Rules Engine is down for an hour, every transaction is waiting when it recovers — in order. RabbitMQ deletes on ACK. REST creates synchronous coupling.</p>
+        <h3>How does the Rules Engine scale without double-processing?</h3>
+        <p>Kafka consumer groups assign one partition to exactly one consumer, so instances partition the work without overlap. For rare redeliveries, the Redis idempotency key ensures double-processing is silently skipped.</p>
+        <h3>What happens when an unauthenticated user hits a protected endpoint?</h3>
+        <p>The JWT filter runs before any controller. With no valid token the SecurityContext stays anonymous and Spring Security returns <strong>401</strong> with structured JSON — no stack trace. The request is logged with source IP.</p>
+        <h3>Why BCrypt cost factor 12?</h3>
+        <p>Cost is exponential. Cost 10 ≈ 75ms (too fast, GPU-brute-forceable). Cost 14 ≈ 1000ms (too slow under load). Cost 12 ≈ 250ms — the sweet spot.</p>
+        <h3>Why hash refresh tokens before storing?</h3>
+        <p>If the DB is breached, plaintext refresh tokens let an attacker issue JWT pairs for every user. Hashing (SHA-256) gives the attacker only useless hashes. The raw token travels only over HTTPS.</p>
+        <h3>How do you change fraud rules without redeploying?</h3>
+        <p>Rules live in the <code>fraud_rules</code> table, not code. The Rules Engine re-queries every 60 seconds via a scheduled job. An analyst updates a threshold via the Admin API — it takes effect within 60 seconds, no restart.</p>
+        <h3>Can I replace H2 with PostgreSQL in dev?</h3>
+        <p>Yes. Set the profile to <code>dev</code>, run <code>docker-compose up postgres</code>, update the DB env vars. JPA DDL auto-create handles schema generation in both — the same entity classes work unchanged.</p>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<button id="chat-fab" aria-label="Open guide assistant">💬</button>
+
+<div id="chat-panel" class="hidden">
+  <div class="chat-settings hidden">
+    <h3>⚙️ Assistant Settings</h3>
+    <div class="settings-field">
+      <label>AI Provider</label>
+      <select id="settings-provider">
+        <option value="offline" selected>📴 Offline (TF-IDF, always works)</option>
+        <option value="free">🆓 Built-in AI (no key required)</option>
+        <option value="openai">OpenAI</option>
+        <option value="groq">Groq (fast, free tier)</option>
+        <option value="perplexity">Perplexity (web-capable)</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="custom">Custom endpoint</option>
+      </select>
+    </div>
+    <div class="settings-field"><label>API Key (optional)</label><input type="password" id="settings-apikey" placeholder="sk-…" autocomplete="off" /></div>
+    <div class="settings-field"><label>Model override (optional)</label><input type="text" id="settings-model" placeholder="e.g. gpt-4o-mini" /></div>
+    <div class="settings-field"><label>Custom base URL</label><input type="text" id="settings-customurl" placeholder="https://…/v1" /></div>
+    <div class="settings-field"><label><input type="checkbox" id="settings-websearch" /> Search Wikipedia for references</label></div>
+    <div class="settings-actions">
+      <button class="btn btn-primary" id="settings-save">Save</button>
+      <button class="btn btn-secondary" id="settings-back">Back</button>
+      <button class="btn btn-secondary" id="settings-clear">Clear</button>
+    </div>
+  </div>
+  <div class="chat-head">
+    <div class="chat-avatar">🛡️</div>
+    <div class="chat-head-info">
+      <div class="chat-head-title">FraudShield Guide</div>
+      <div class="chat-head-status"><span class="status-dot"></span><span class="mode-pill" id="chat-mode-pill">OFFLINE</span></div>
+    </div>
+    <div class="chat-head-actions">
+      <button id="chat-gear" aria-label="Settings" title="Settings">⚙️</button>
+      <button id="chat-close" aria-label="Close chat" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="chat-suggest" id="chat-suggest"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Ask about auth, Kafka, rules…" autocomplete="off" />
+    <button id="chat-send" aria-label="Send">➤</button>
+  </div>
+  <div class="chat-disclaimer">Answers grounded in this guide • AI mode optional</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+<style>
+#flow-fab{position:fixed;bottom:28px;left:28px;display:flex;align-items:center;gap:8px;padding:0 22px;height:52px;border-radius:999px;background:linear-gradient(135deg,#0b5fff,#00a98f);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',system-ui,sans-serif;border:none;cursor:pointer;box-shadow:0 6px 24px rgba(11,95,255,.35);z-index:1000;transition:transform .2s,box-shadow .2s;}
+#flow-fab:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(11,95,255,.45);}
+.fab-pulse{width:9px;height:9px;border-radius:50%;background:#fff;animation:fabPulse 1.6s ease-in-out infinite;}
+@keyframes fabPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.5);}}
+#flow-modal{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;transition:opacity .25s;}
+#flow-modal.flow-hidden{opacity:0;pointer-events:none;}
+#flow-backdrop{position:absolute;inset:0;background:rgba(8,13,24,.82);backdrop-filter:blur(10px);}
+#flow-panel{position:relative;width:100%;max-width:960px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 32px 100px rgba(0,0,0,.4);overflow:hidden;display:flex;flex-direction:column;max-height:94vh;}
+.fv-header{background:linear-gradient(135deg,#0b5fff 0%,#0072f5 50%,#00a98f 100%);padding:18px 24px;display:flex;align-items:flex-start;gap:14px;flex-shrink:0;}
+.fv-header-icon{font-size:28px;line-height:1;}
+.fv-header-text{flex:1;}
+.fv-header-text h2{color:#fff;font-size:17px;font-weight:800;margin:0 0 3px;}
+.fv-header-text p{color:rgba(255,255,255,.75);font-size:12.5px;margin:0;}
+#flow-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:background .15s;}
+#flow-close:hover{background:rgba(255,255,255,.35);}
+.fv-track{padding:16px 24px 12px;background:var(--surface-2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.fv-track::-webkit-scrollbar{height:3px;}.fv-track::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.fv-track-inner{display:flex;align-items:center;gap:0;min-width:max-content;padding:4px 0;}
+.fv-stage{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:0 6px;}
+.fv-stage-circle{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:17px;transition:all .3s;box-shadow:var(--shadow-sm);}
+.fv-stage-label{font-size:9px;font-weight:700;color:var(--text-muted);text-align:center;white-space:pre-line;transition:color .3s;letter-spacing:.03em;text-transform:uppercase;line-height:1.3;}
+.fv-stage.fs-active .fv-stage-circle{border-color:#0b5fff;background:#e7f0ff;box-shadow:0 0 0 4px rgba(11,95,255,.18),0 3px 14px rgba(11,95,255,.3);transform:scale(1.18);}
+html[data-theme="dark"] .fv-stage.fs-active .fv-stage-circle{background:#16233c;}
+.fv-stage.fs-active .fv-stage-label{color:#0b5fff;font-weight:800;}
+.fv-stage.fs-done .fv-stage-circle{border-color:#00a98f;background:#e6f9f5;}
+.fv-stage.fs-done .fv-stage-label{color:#00a98f;}
+html[data-theme="dark"] .fv-stage.fs-done .fv-stage-circle{background:#0f2b25;}
+.fv-connector{width:28px;height:2px;background:var(--border);flex-shrink:0;position:relative;}
+.fv-connector::after{content:'';position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left-color:var(--border);}
+.fv-connector.fc-active{background:linear-gradient(90deg,#0b5fff,#00a98f);}
+.fv-connector.fc-active::after{border-left-color:#00a98f;}
+.fv-body{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0;overflow:hidden;}
+@media(max-width:680px){.fv-body{grid-template-columns:1fr;overflow-y:auto;}}
+.fv-left{padding:22px 20px 22px 24px;overflow-y:auto;border-right:1px solid var(--border);}
+.fv-right{padding:22px 24px 22px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.fv-left::-webkit-scrollbar,.fv-right::-webkit-scrollbar{width:4px;}
+.fv-left::-webkit-scrollbar-thumb,.fv-right::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.fv-layer-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;}
+.fv-layer-badge.lb-security{background:#e7f0ff;color:#0a3fb0;}.fv-layer-badge.lb-validation{background:#e6f9f5;color:#006b5b;}.fv-layer-badge.lb-request{background:#fff4e0;color:#7a4800;}.fv-layer-badge.lb-process{background:#f0f2f5;color:#4b5563;}.fv-layer-badge.lb-done{background:#e6f9f5;color:#006b5b;}
+html[data-theme="dark"] .fv-layer-badge.lb-security{background:#16233c;color:#9cc2ff;}html[data-theme="dark"] .fv-layer-badge.lb-validation{background:#0f2b25;color:#30d6b8;}html[data-theme="dark"] .fv-layer-badge.lb-request{background:#2b1f0a;color:#e2a33d;}html[data-theme="dark"] .fv-layer-badge.lb-process{background:#1b2435;color:#b7c0ce;}html[data-theme="dark"] .fv-layer-badge.lb-done{background:#0f2b25;color:#30d6b8;}
+#fv-step-title{font-size:18px;font-weight:800;color:var(--text);margin:0 0 5px;line-height:1.3;}
+#fv-step-subtitle{font-size:13px;color:var(--text-muted);margin:0 0 16px;font-style:italic;line-height:1.5;}
+.fv-section-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px;}
+.fv-checks{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:7px;}
+.fv-check{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--text-soft);line-height:1.55;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;}
+.fv-check .ck-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+.fv-fail-box{background:#fdecea;border:1px solid #f5c0c0;border-left:4px solid #d64545;border-radius:8px;padding:11px 14px;margin-top:4px;font-size:12.5px;color:#7a1515;line-height:1.55;}
+html[data-theme="dark"] .fv-fail-box{background:#2b0f0f;border-color:#5a1a1a;border-left-color:#ff6b6b;color:#ffaaaa;}
+.fv-fail-box strong{color:#a31515;}html[data-theme="dark"] .fv-fail-box strong{color:#ff6b6b;}
+.fv-pass-box{background:#e6f9f5;border:1px solid #b3ead9;border-left:4px solid #00a98f;border-radius:8px;padding:11px 14px;margin-top:8px;font-size:12.5px;color:#0a4a38;line-height:1.55;}
+html[data-theme="dark"] .fv-pass-box{background:#0f2b25;border-color:#1a5c45;border-left-color:#30d6b8;color:#64e8cb;}
+.fv-detail-card{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;}
+.fv-detail-card-head{padding:8px 14px;background:var(--border);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);}
+.fv-detail-card-body{padding:12px 14px;}
+.fv-detail-card pre{font-family:'JetBrains Mono',Consolas,monospace;font-size:11.5px;line-height:1.7;color:var(--text-soft);white-space:pre-wrap;word-break:break-word;margin:0;overflow-x:hidden;}
+.fv-token-parts{display:flex;flex-direction:column;gap:6px;}
+.fv-token-part{border-radius:7px;padding:8px 11px;font-family:'JetBrains Mono',monospace;font-size:10.5px;word-break:break-all;line-height:1.5;}
+.fv-token-part.tp-header{background:#fff4e0;color:#7a4800;border:1px solid #ffe0a0;}.fv-token-part.tp-payload{background:#e7f0ff;color:#0a3fb0;border:1px solid #b3c9ff;}.fv-token-part.tp-sig{background:#e6f9f5;color:#006b5b;border:1px solid #b3ead9;}
+html[data-theme="dark"] .fv-token-part.tp-header{background:#2b1f0a;color:#e2a33d;border-color:#5a3a00;}html[data-theme="dark"] .fv-token-part.tp-payload{background:#16233c;color:#9cc2ff;border-color:#1e3a6a;}html[data-theme="dark"] .fv-token-part.tp-sig{background:#0f2b25;color:#30d6b8;border-color:#1a5c45;}
+.fv-token-part-label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.65;display:block;margin-bottom:3px;}
+.fv-result-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.fv-result-row:last-child{border-bottom:none;}
+.fv-result-key{color:var(--text-muted);font-weight:700;flex:0 0 120px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.fv-result-val{color:var(--text-soft);flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.fv-result-status{font-size:13px;flex-shrink:0;}
+.fv-controls{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-top:1px solid var(--border);flex-shrink:0;gap:10px;}
+.fvc-group{display:flex;gap:8px;}
+.fvc-btn{padding:8px 18px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-soft);font-size:12.5px;font-weight:700;font-family:'Inter',system-ui,sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.fvc-btn:hover{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);}
+#fvc-play{background:linear-gradient(135deg,#0b5fff,#00a98f);color:#fff;border-color:transparent;min-width:90px;}
+#fvc-play:hover{opacity:.9;}
+.fv-counter{font-size:12px;font-weight:700;color:var(--text-muted);}
+</style>
+
+<button id="flow-fab" title="Request Security Pipeline walkthrough"><span class="fab-pulse"></span>🔐 Flow</button>
+
+<div id="flow-modal" class="flow-hidden">
+  <div id="flow-backdrop"></div>
+  <div id="flow-panel">
+    <div class="fv-header">
+      <div class="fv-header-icon">🔐</div>
+      <div class="fv-header-text">
+        <h2>Request Security Pipeline — Live Walkthrough</h2>
+        <p>Every HTTP request passes 9 security &amp; processing gates. See what each checks, what fails it, and what gets through.</p>
+      </div>
+      <button id="flow-close">&#x2715;</button>
+    </div>
+    <div class="fv-track"><div class="fv-track-inner" id="fv-track-inner"></div></div>
+    <div class="fv-body">
+      <div class="fv-left">
+        <div id="fv-badge" class="fv-layer-badge lb-request">Gate 0</div>
+        <div id="fv-title-wrap"></div>
+        <div id="fv-left-content"></div>
+      </div>
+      <div class="fv-right" id="fv-right-content"></div>
+    </div>
+    <div class="fv-controls">
+      <div class="fvc-group">
+        <button class="fvc-btn" id="fvc-prev">&#8249; Prev</button>
+        <button class="fvc-btn" id="fvc-play">&#9208; Pause</button>
+        <button class="fvc-btn" id="fvc-next">Next &#8250;</button>
+        <button class="fvc-btn" id="fvc-restart">&#8635;</button>
+      </div>
+      <span class="fv-counter" id="fv-counter">Step 1 of 10</span>
+    </div>
+  </div>
+</div>
+
+<script>
+window.FRAUDSHIELD_KB={
+docs:[
+{id:'overview',title:'What FraudShield Is',anchor:'overview',tags:['intro','overview','fraud','detection'],text:'FraudShield is a real-time event-driven fraud detection platform built with Java 17 and Spring Boot 3.2. It ingests payment transaction events, evaluates them against a configurable rules engine, flags suspicious activity, and alerts users within milliseconds. Uses Apache Kafka as the event backbone, Redis for sliding-window counters and token blacklisting, and PostgreSQL for durable storage.'},
+{id:'architecture',title:'The Big Picture',anchor:'architecture',tags:['architecture','system','context','c4','diagram'],text:'Six Spring Boot microservices communicate over Apache Kafka and REST. Transaction Service is the only public entry point. Rules Engine evaluates fraud using Redis sliding windows. Alert Service dispatches notifications. Admin API is the control plane. Auth Service manages JWT tokens. Notification Worker sends emails/SMS.'},
+{id:'hld',title:'High-Level Design',anchor:'hld',tags:['hld','design','high level'],text:'Event-Driven Microservices with CQRS. Services communicate asynchronously via Kafka topics. Each service owns its data store. Synchronous REST only for client-facing APIs. System targets 99.9% uptime and sub-100ms fraud evaluation latency.'},
+{id:'tech-stack',title:'Tech Stack & Why',anchor:'tech-stack',tags:['tech stack','java','spring boot','kafka','redis','postgresql','jwt','why'],text:'Java 17 LTS. Spring Boot 3.2 auto-configuration. Spring Security 6 for RBAC and JWT filter chain. Apache Kafka for event streaming with replay capability. Redis for sub-millisecond velocity counters and token blacklisting. PostgreSQL for ACID storage. H2 in-memory for dev. JWT with jjwt 0.12.3 for stateless auth. Resilience4j for circuit breakers.'},
+{id:'svc-auth',title:'Auth Service',anchor:'svc-auth',tags:['auth','jwt','token','refresh token','login','logout','rbac','blacklist'],text:'Auth Service issues JWT access tokens (15-minute TTL) and refresh tokens (7-day TTL, stored hashed in PostgreSQL). On login: validate BCrypt password, return access + refresh token pair. On token refresh: validate refresh token, rotate it (single use). On logout: add access token jti to Redis blacklist with TTL matching remaining token life. Roles: ROLE_USER, ROLE_ANALYST, ROLE_ADMIN, ROLE_SUPER_ADMIN. BCrypt cost factor 12.'},
+{id:'auth-lambda',title:'Auth & Token Flow',anchor:'auth-lambda',tags:['jwt flow','token refresh','blacklist','logout','access token','refresh token'],text:'Three layers: Login issues JWT (15min) + refresh token (7d hashed in DB). Request auth: JWT filter validates signature, expiry, Redis blacklist, extracts userId+roles into SecurityContext. Logout: access token jti added to Redis blacklist with TTL, refresh token deleted from DB. Token rotation: each refresh use issues new pair and invalidates old refresh token.'},
+{id:'svc-rules-engine',title:'Rules Engine Service',anchor:'svc-rules-engine',tags:['rules engine','fraud rules','velocity','sliding window','kafka consumer'],text:'Consumes raw-transactions Kafka topic. Idempotency check via Redis. Evaluates 4 rules: velocity check (Redis ZADD sliding window, >5 txns/60sec), amount anomaly (>3x 30-day avg), geo-mismatch, duplicate detection. Composite score threshold=50. FLAGGED if score>=50. Rules stored in DB, refreshed every 60 seconds without restart.'},
+{id:'e2e-flow',title:'End-to-End Request Flow',anchor:'e2e-flow',tags:['flow','end to end','request','sequence','walkthrough'],text:'1) Client POST /api/transactions + JWT. 2) JWT filter validates. 3) Transaction saved + Kafka published. 4) Rules Engine evaluates (Redis velocity check). 5) Verdict FLAGGED published. 6) Alert Service creates alert. 7) Notification Worker sends mock email. Total: ~150ms.'},
+{id:'security',title:'Security',anchor:'security',tags:['security','authentication','authorization','rbac','owasp','layers'],text:'5 security layers: HTTPS transport, JWT auth with Redis blacklist, RBAC via Spring Security URL patterns and @PreAuthorize, Bean Validation on all DTOs, BCrypt passwords and hashed tokens. 401 vs 403 distinction. OWASP Top 10 mitigated via JPA parameterized queries, CORS configuration, rate limiting, structured error responses without stack traces.'},
+{id:'resilience',title:'Resilience & Fault Tolerance',anchor:'resilience',tags:['resilience','circuit breaker','retry','fallback','resilience4j'],text:'Resilience4j patterns: Circuit Breaker on Alert Service to Notification publish (50% failure/10 calls opens). Retry on Kafka publish (3 attempts exponential backoff). Rate Limiter on Admin API (100 req/10s). Bulkhead on Rules Engine (50 concurrent evaluations). Dead Letter Topics for failed messages. Idempotency keys prevent duplicate processing.'},
+{id:'build-deploy',title:'Build & Deployment',anchor:'build-deploy',tags:['build','deploy','docker','maven','run','start','how to run'],text:'Run mock mode: cd auth-service && mvn spring-boot:run. Full stack: docker-compose up --build. Pre-seeded accounts: admin@fraudshield.io/Admin@123 (ROLE_ADMIN), analyst@fraudshield.io/Analyst@123 (ROLE_ANALYST), user@fraudshield.io/User@123 (ROLE_USER). Swagger UI: http://localhost:8081/swagger-ui.html.'},
+{id:'glossary',title:'Glossary',anchor:'glossary',tags:['glossary','terms','definitions'],text:'JWT: stateless signed token. Refresh Token: long-lived single-use token for obtaining new JWTs. Token Rotation: each refresh invalidates old token. Blacklist: Redis set of revoked JWTs. Kafka Topic: append-only event log. DLT: dead letter topic for failed messages. Idempotency: same result on repeated operations. Sliding Window: rolling time-based counter. RBAC: role-based access control. Circuit Breaker: stops calling failing services.'},
+{id:'faq',title:'FAQ',anchor:'faq',tags:['faq','questions','answers'],text:'Why JWT not sessions? Stateless, no DB lookup per request. Why Kafka not RabbitMQ? Message retention and replay. Why BCrypt cost 12? ~250ms per hash, brute-force resistant. Why hash refresh tokens? DB breach protection. How change rules without redeploy? Rules in DB refreshed every 60s. Why Redis for rate limiting? O(1) atomic operations, shared across instances.'}
+],
+faqs:[
+{pattern:/how.*run|start.*project|get.*started/i,answer:'Run `mvn spring-boot:run` in mock mode (H2, no infra). For full stack: `docker-compose up --build`. See Build & Deployment section.'},
+{pattern:/jwt.*work|how.*token|access token/i,answer:'JWT access tokens (15min) + refresh tokens (7d). JWT filter validates signature, expiry, and Redis blacklist on every request. See Auth & Token Flow section.'},
+{pattern:/kafka.*down|if kafka fail/i,answer:'Transaction Service buffers, returns 503 after buffer full. Rules Engine pauses and resumes on recovery. No data loss — Kafka retains messages 7 days.'},
+{pattern:/why kafka|kafka vs rabbit/i,answer:'Kafka retains messages for replay (7 days) and supports consumer group scaling. RabbitMQ deletes on ACK — no replay. See Tech Stack & Why.'},
+{pattern:/refresh token|token rotation/i,answer:'Refresh tokens are single-use. Each refresh invalidates the old token and issues a new pair — limits blast radius of stolen token.'},
+{pattern:/blacklist|logout|revok/i,answer:'On logout, the JWT jti is stored in Redis with TTL = remaining token life. Redis GET on every request checks this. Auto-expires when token would have expired.'},
+{pattern:/password|bcrypt|hash/i,answer:'Passwords hashed with BCrypt cost factor 12 (~250ms/hash). Brute-force resistant. Refresh tokens also hashed before DB storage.'},
+{pattern:/ports?|port number/i,answer:'Transaction: 8081, Rules Engine: 8082, Alert: 8083, Admin API: 8084, Auth: 8085, Notification: 8086, Kafka: 9092, Redis: 6379, PostgreSQL: 5432.'},
+{pattern:/false positive|wrong flag/i,answer:'Analysts override via Admin API. Override recorded in audit log, user notified. See Admin API section.'},
+{pattern:/scale|scaling/i,answer:'Rules Engine scales horizontally — add consumer instances in same Kafka consumer group. HPA on Kafka consumer lag > 1000 messages.'}
+],
+synonyms:{
+'transaction':['payment','event','tx','txn'],
+'fraud':['suspicious','flagged','anomaly'],
+'authentication':['auth','login','jwt','token'],
+'kafka':['message queue','event bus','streaming','topics'],
+'circuit breaker':['resilience','fallback','resilience4j'],
+'sliding window':['velocity','rate check','time window'],
+'rbac':['roles','permissions','access control']
+},
+smalltalk:{
+'hello':'Hi! I\'m the FraudShield guide assistant. Ask me about architecture, authentication, Kafka, fraud rules, or deployment. 🛡️',
+'hi':'Hello! Ask me anything about FraudShield.',
+'thanks':'Happy to help!',
+'thank you':'You\'re welcome! Anything else?',
+'help':'Ask me about FraudShield\'s architecture, JWT auth, Kafka flows, fraud rules, or how to run the project.'
+}
+};
+
+(function(){
+'use strict';
+function getMermaidTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'default';}
+function initMermaid(){if(typeof mermaid==='undefined'){showFallbacks();return;}mermaid.initialize({startOnLoad:false,theme:getMermaidTheme(),securityLevel:'loose',flowchart:{curve:'basis',htmlLabels:true},sequence:{actorMargin:60},fontFamily:"'Inter',system-ui,sans-serif"});renderAll();}
+function renderAll(){
+  if(typeof mermaid==='undefined'){showFallbacks();return;}
+  var diagrams=document.querySelectorAll('.mermaid');
+  diagrams.forEach(function(el){if(!el.getAttribute('data-src'))el.setAttribute('data-src',el.textContent.trim());el.removeAttribute('data-processed');el.innerHTML=el.getAttribute('data-src');});
+  try{mermaid.run({nodes:diagrams}).catch(function(){showFallbacks();});}catch(e){showFallbacks();}
+}
+function showFallbacks(){document.querySelectorAll('.mermaid').forEach(function(el){el.style.display='none';});document.querySelectorAll('.diagram-fallback').forEach(function(el){el.style.display='block';});}
+window.rerenderMermaid=function(){setTimeout(function(){if(typeof mermaid!=='undefined'){mermaid.initialize({startOnLoad:false,theme:getMermaidTheme(),securityLevel:'loose',flowchart:{curve:'basis',htmlLabels:true},fontFamily:"'Inter',system-ui,sans-serif"});renderAll();}},60);};
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){setTimeout(initMermaid,200);});}else{setTimeout(initMermaid,200);}
+})();
+
+(function(){
+'use strict';
+var STORAGE_KEY='fraudshield-theme',ticking=false;
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  document.querySelectorAll('.theme-toggle-btn').forEach(function(b){b.textContent=theme==='dark'?'☀️':'🌙';});
+  localStorage.setItem(STORAGE_KEY,theme);
+  if(window.rerenderMermaid)window.rerenderMermaid();
+}
+function loadTheme(){
+  var s=localStorage.getItem(STORAGE_KEY);
+  if(s){applyTheme(s);return;}
+  applyTheme(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+}
+function updateProgress(){
+  var b=document.getElementById('progress-bar');
+  if(!b)return;
+  var t=document.documentElement.scrollHeight-window.innerHeight;
+  b.style.width=(t>0?(window.scrollY/t)*100:0)+'%';
+}
+function updateScrollspy(){
+  var links=document.querySelectorAll('nav.toc a[href^="#"]');
+  if(!links.length)return;
+  var sections=[],scrollY=window.scrollY+120,active=null;
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1),el=document.getElementById(id);if(el)sections.push({top:el.offsetTop,link:a});});
+  sections.forEach(function(s){if(s.top<=scrollY)active=s;});
+  links.forEach(function(a){a.classList.remove('active');});
+  if(active){active.link.classList.add('active');active.link.scrollIntoView({block:'nearest',behavior:'smooth'});}
+}
+function onScroll(){if(!ticking){window.requestAnimationFrame(function(){updateProgress();updateScrollspy();ticking=false;});ticking=true;}}
+function setupFilter(){
+  var input=document.getElementById('toc-filter');
+  if(!input)return;
+  input.addEventListener('input',function(){
+    var q=input.value.trim().toLowerCase();
+    document.querySelectorAll('nav.toc a[href^="#"]').forEach(function(a){a.style.display=(!q||a.textContent.toLowerCase().includes(q))?'':'none';});
+    document.querySelectorAll('.toc-chapter').forEach(function(ch){
+      var n=ch.nextElementSibling,any=false;
+      while(n&&!n.classList.contains('toc-chapter')){if(n.tagName==='A'&&n.style.display!=='none')any=true;n=n.nextElementSibling;}
+      ch.style.display=any?'':'none';
+    });
+  });
+}
+function setupMobileSidebar(){
+  var m=document.getElementById('menu-toggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebar-overlay');
+  if(!m||!s||!o)return;
+  m.addEventListener('click',function(){s.classList.add('open');o.classList.add('open');});
+  o.addEventListener('click',function(){s.classList.remove('open');o.classList.remove('open');});
+  s.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){if(window.innerWidth<=1000){s.classList.remove('open');o.classList.remove('open');}});});
+}
+function setupSmoothScroll(){
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href^="#"]');
+    if(!a)return;
+    var el=document.getElementById(a.getAttribute('href').slice(1));
+    if(el){e.preventDefault();el.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+}
+function addHeadingAnchors(){
+  document.querySelectorAll('h2[id],h3[id]').forEach(function(h){
+    if(h.querySelector('.anchor-link'))return;
+    var a=document.createElement('a');
+    a.href='#'+h.id;a.className='anchor-link';a.textContent='¶';a.title='Link to this section';
+    h.appendChild(a);
+  });
+}
+window.fraudshieldJumpTo=function(id){
+  var el=document.getElementById(id);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.transition='background .4s';el.style.background='var(--brand-soft)';setTimeout(function(){el.style.background='';},1200);}
+};
+function init(){
+  loadTheme();
+  document.querySelectorAll('.theme-toggle-btn').forEach(function(b){
+    b.addEventListener('click',function(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+  });
+  window.addEventListener('scroll',onScroll,{passive:true});
+  updateProgress();updateScrollspy();
+  setupFilter();setupMobileSidebar();setupSmoothScroll();addHeadingAnchors();
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+})();
+
+(function(){
+'use strict';
+var SETTINGS_KEY='fraudshield-chat-settings',SETTINGS_VERSION='2',PROJECT_SLUG='fraudshield';
+var SUGGESTIONS=['How does JWT auth work?','Why Kafka over RabbitMQ?','How to run the project?','What is the fraud scoring logic?','How does token refresh work?','What happens if Kafka is down?','How does the Rules Engine scale?','What ports do services use?'];
+var PROVIDERS={free:{label:'🆓 Built-in (no key)',url:'https://text.pollinations.ai/openai',model:'openai-fast'},perplexity:{label:'Perplexity',url:'https://api.perplexity.ai',model:'llama-3.1-sonar-small-128k-online'},openrouter:{label:'OpenRouter',url:'https://openrouter.ai/api/v1',model:'meta-llama/llama-3.1-8b-instruct:free'},openai:{label:'OpenAI',url:'https://api.openai.com/v1',model:'gpt-4o-mini'},groq:{label:'Groq',url:'https://api.groq.com/openai/v1',model:'llama-3.1-8b-instant'},custom:{label:'Custom',url:'',model:''}};
+var settings=loadSettings(),panelOpen=false,settingsOpen=false;
+var STOP_WORDS=new Set(['a','an','the','is','are','was','were','be','been','have','has','had','do','does','did','will','would','could','should','may','might','to','of','in','on','at','by','for','with','about','as','from','and','or','but','not','this','that','it','we','you','he','she','they','what','how','why','when','where','which','who']);
+function stem(w){return w.replace(/(ing|ed|es|er|s)$/,'').toLowerCase();}
+function tokenize(t){return t.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){return w.length>2&&!STOP_WORDS.has(w);}).map(stem);}
+function expandQuery(tokens){var syn=(window.FRAUDSHIELD_KB||{}).synonyms||{},exp=tokens.slice();tokens.forEach(function(t){Object.keys(syn).forEach(function(key){var sk=stem(key);if(sk===t||syn[key].some(function(s){return stem(s)===t;})){tokenize(key).forEach(function(k){if(!exp.includes(k))exp.push(k);});}});});return exp;}
+function buildIDF(docs){var df={};docs.forEach(function(d){var seen={};tokenize(d.text+' '+d.title+' '+d.tags.join(' ')).forEach(function(t){if(!seen[t]){df[t]=(df[t]||0)+1;seen[t]=true;}});});var N=docs.length,idf={};Object.keys(df).forEach(function(t){idf[t]=Math.log((N+1)/(df[t]+1))+1;});return idf;}
+function scoreDoc(query,doc,idf){var qT=expandQuery(tokenize(query)),bodyT=tokenize(doc.text),titleT=tokenize(doc.title+' '+doc.tags.join(' ')),tf={};bodyT.forEach(function(t){tf[t]=(tf[t]||0)+1;});titleT.forEach(function(t){tf[t]=(tf[t]||0)+3;});var len=bodyT.length+1,s=0;qT.forEach(function(t){if(tf[t])s+=(tf[t]/len)*(idf[t]||1);});return s;}
+function retrieveTop(query,n){var kb=window.FRAUDSHIELD_KB||{docs:[],faqs:[]},docs=kb.docs||[],idf=buildIDF(docs);n=n||3;return docs.map(function(d){return{doc:d,score:scoreDoc(query,d,idf)};}).filter(function(r){return r.score>0;}).sort(function(a,b){return b.score-a.score;}).slice(0,n).map(function(r){return r.doc;});}
+function offlineAnswer(query){var kb=window.FRAUDSHIELD_KB||{docs:[],faqs:[],smalltalk:{}},clean=query.trim().toLowerCase(),st=kb.smalltalk||{};if(st[clean])return{text:st[clean],doc:null};var faqs=kb.faqs||[];for(var i=0;i<faqs.length;i++){if(faqs[i].pattern.test(query)){var top=retrieveTop(query,1)[0]||null;return{text:faqs[i].answer,doc:top};}}var results=retrieveTop(query,1);if(!results.length)return{text:"I don't have specific info about that. Try asking about auth, Kafka, rules engine, deployment, or security.",doc:null};var doc=results[0],snippet=doc.text.slice(0,280).replace(/\s+/g,' ').trim();if(doc.text.length>280)snippet+='…';return{text:snippet,doc:doc};}
+function getProvider(){var p=PROVIDERS[settings.provider]||PROVIDERS.free;if(settings.provider==='custom')return{url:settings.customUrl||p.url,model:settings.customModel||'gpt-3.5-turbo'};return{url:p.url,model:settings.model||p.model};}
+function buildSystemPrompt(query){var top3=retrieveTop(query,3),ctx=top3.map(function(d){return'### '+d.title+' (#'+d.anchor+')\n'+d.text;}).join('\n\n');return'You are the FraudShield architecture guide assistant. Answer based on the context. End with "📖 Read: <section title>".\n\nCONTEXT:\n'+ctx;}
+async function aiAnswer(query,onChunk,onDone,onError){var prov=getProvider(),apiKey=settings.apiKey||'',headers={'Content-Type':'application/json'};if(apiKey)headers['Authorization']='Bearer '+apiKey;var body=JSON.stringify({model:prov.model,stream:true,messages:[{role:'system',content:buildSystemPrompt(query)},{role:'user',content:query}]});try{var resp=await fetch(prov.url+'/chat/completions',{method:'POST',headers:headers,body:body});if(!resp.ok)throw new Error('HTTP '+resp.status);var reader=resp.body.getReader(),decoder=new TextDecoder(),full='';while(true){var result=await reader.read();if(result.done)break;var chunk=decoder.decode(result.value,{stream:true});chunk.split('\n').forEach(function(line){line=line.trim();if(!line.startsWith('data: '))return;var data=line.slice(6);if(data==='[DONE]')return;try{var parsed=JSON.parse(data),content=(parsed.choices[0].delta||{}).content||'';if(content){full+=content;onChunk(content);}}catch(e){}});}onDone(full);}catch(err){onError(err);}}
+function el(id){return document.getElementById(id);}
+function appendMessage(role,html,isStreaming){var body=el('chat-body'),div=document.createElement('div');div.className='msg '+role;div.innerHTML='<div class="msg-avatar">'+(role==='bot'?'🛡️':'👤')+'</div><div class="msg-bubble">'+(isStreaming?'<span class="stream-text"></span>':html)+'</div>';body.appendChild(div);body.scrollTop=body.scrollHeight;return div;}
+function addJumpLink(bubble,doc){if(!doc)return;var link=document.createElement('a');link.className='jump-link';link.textContent='📖 Read: '+doc.title;link.href='#'+doc.anchor;link.addEventListener('click',function(e){e.preventDefault();togglePanel(false);if(window.fraudshieldJumpTo)window.fraudshieldJumpTo(doc.anchor);});bubble.querySelector('.msg-bubble').appendChild(document.createElement('br'));bubble.querySelector('.msg-bubble').appendChild(link);}
+function setModePill(mode){var p=el('chat-mode-pill');if(p)p.textContent=mode;}
+function togglePanel(force){panelOpen=force!==undefined?force:!panelOpen;var p=el('chat-panel');if(p)p.classList.toggle('hidden',!panelOpen);}
+function toggleSettings(force){settingsOpen=force!==undefined?force:!settingsOpen;var s=document.querySelector('.chat-settings');if(s)s.classList.toggle('hidden',!settingsOpen);}
+function escHtml(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+async function sendMessage(query){
+  query=query.trim();if(!query)return;
+  appendMessage('user',escHtml(query));
+  var useAI=settings.provider&&settings.provider!=='offline'&&settings.provider!=='';
+  if(!useAI){
+    setModePill('OFFLINE');
+    var ans=offlineAnswer(query),msg=appendMessage('bot',escHtml(ans.text));
+    if(ans.doc)addJumpLink(msg,ans.doc);
+  }else{
+    setModePill('AI'+(settings.searchWeb?' + refs':''));
+    var streamDiv=appendMessage('bot','',true),streamSpan=streamDiv.querySelector('.stream-text'),fullText='';
+    try{
+      await aiAnswer(query,function(chunk){fullText+=chunk;streamSpan.textContent=fullText;el('chat-body').scrollTop=el('chat-body').scrollHeight;},
+      function(full){var topDoc=retrieveTop(query,1)[0]||null;if(topDoc)addJumpLink(streamDiv,topDoc);},
+      function(err){streamSpan.textContent='AI request failed ('+err.message+'). Falling back to offline mode.';var ans2=offlineAnswer(query);var p=document.createElement('p');p.style.marginTop='8px';p.textContent=ans2.text;streamDiv.querySelector('.msg-bubble').appendChild(p);if(ans2.doc)addJumpLink(streamDiv,ans2.doc);setModePill('OFFLINE');});
+    }catch(e){streamSpan.textContent='Error: '+e.message;}
+  }
+}
+function loadSettings(){try{var s=JSON.parse(localStorage.getItem(SETTINGS_KEY));if(!s||s._v!==SETTINGS_VERSION){var f={provider:'offline',_v:SETTINGS_VERSION};localStorage.setItem(SETTINGS_KEY,JSON.stringify(f));return f;}return s;}catch(e){return{provider:'offline',_v:SETTINGS_VERSION};}}
+function saveSettings(obj){settings=Object.assign(settings,obj);localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}
+function init(){
+  var fab=el('chat-fab'),closeBtn=el('chat-close'),gearBtn=el('chat-gear'),sendBtn=el('chat-send'),inputEl=el('chat-input'),saveBtn=el('settings-save'),clearBtn=el('settings-clear'),backBtn=el('settings-back');
+  if(fab)fab.addEventListener('click',function(){togglePanel();});
+  if(closeBtn)closeBtn.addEventListener('click',function(){togglePanel(false);});
+  if(gearBtn)gearBtn.addEventListener('click',function(){toggleSettings();});
+  if(backBtn)backBtn.addEventListener('click',function(){toggleSettings(false);});
+  if(sendBtn)sendBtn.addEventListener('click',function(){var v=inputEl?inputEl.value:'';if(inputEl)inputEl.value='';sendMessage(v);});
+  if(inputEl)inputEl.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();var v=inputEl.value;inputEl.value='';sendMessage(v);}});
+  var sc=el('chat-suggest');
+  if(sc)SUGGESTIONS.forEach(function(s){var c=document.createElement('button');c.className='suggest-chip';c.textContent=s;c.addEventListener('click',function(){sendMessage(s);});sc.appendChild(c);});
+  if(saveBtn)saveBtn.addEventListener('click',function(){var p=el('settings-provider'),k=el('settings-apikey'),m=el('settings-model'),w=el('settings-websearch');saveSettings({provider:p?p.value:'offline',apiKey:k?k.value:'',model:m?m.value:'',searchWeb:w?w.checked:false,_v:SETTINGS_VERSION});toggleSettings(false);setModePill(settings.provider==='offline'?'OFFLINE':'AI'+(settings.searchWeb?' + refs':''));});
+  if(clearBtn)clearBtn.addEventListener('click',function(){localStorage.removeItem(SETTINGS_KEY);settings={provider:'offline',_v:SETTINGS_VERSION};if(el('settings-provider'))el('settings-provider').value='offline';setModePill('OFFLINE');toggleSettings(false);});
+  if(el('settings-provider')&&settings.provider)el('settings-provider').value=settings.provider;
+  if(el('settings-apikey')&&settings.apiKey)el('settings-apikey').value=settings.apiKey;
+  if(el('settings-websearch')&&settings.searchWeb)el('settings-websearch').checked=settings.searchWeb;
+  setModePill((settings.provider&&settings.provider!=='offline'&&settings.provider!=='')?'AI':'OFFLINE');
+  setTimeout(function(){appendMessage('bot','Hi! I\'m the FraudShield guide assistant. Ask me anything about the architecture, authentication, Kafka flows, fraud rules, or how to run the project. 🛡️');},400);
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+})();
+
+(function(){
+'use strict';
+var STAGES=[
+  {icon:'📡',label:'HTTP\nRequest'},{icon:'🌐',label:'CORS\nFilter'},{icon:'🔍',label:'JWT\nExtract'},
+  {icon:'✍️',label:'Signature\nVerify'},{icon:'📋',label:'Claims\nCheck'},{icon:'💾',label:'Blacklist\nCheck'},
+  {icon:'🔑',label:'Role\nAuthZ'},{icon:'✅',label:'Payload\nValidate'},{icon:'⚙️',label:'Business\nLogic'},{icon:'📤',label:'Response\nSent'}
+];
+var STEPS=[
+{stage:0,badgeClass:'lb-request',badgeText:'INCOMING REQUEST',title:'The HTTP Request Arrives',subtitle:'A payment client sends a POST to create a transaction. Before it touches your business code, it must pass 8 security gates.',
+ checks:[{icon:'📡',text:'<strong>Method POST</strong> — creates a new resource (the transaction).'},{icon:'🔗',text:'<strong>Endpoint /api/transactions</strong> — routed to Transaction Service on port 8081.'},{icon:'📎',text:'<strong>Content-Type application/json</strong> — body is JSON.'},{icon:'🔐',text:'<strong>Authorization: Bearer eyJ...</strong> — the JWT access token. Without it, rejected at Gate 1.'},{icon:'📦',text:'<strong>Body</strong> — amount, currency, merchantId, geo coordinates.'}],
+ failBox:null,passBox:'Accepted by embedded Tomcat. Handed to the Spring Security filter chain (6 filters before your controller).',
+ rightCards:[{head:'📡 Raw HTTP Request',type:'pre',content:'POST /api/transactions HTTP/1.1\nHost: api.fraudshield.io\nContent-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2Vy...SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV\nX-Request-ID: req-7f3a2b'},{head:'📦 Request Body',type:'pre',content:'{\n  "amount":     9999.99,\n  "currency":   "USD",\n  "merchantId": "MERCH-ONLINE-001",\n  "latitude":   40.7128,\n  "longitude":  -74.0060\n}'}]},
+{stage:1,badgeClass:'lb-security',badgeText:'GATE 0 — CORS',title:'CORS Filter — Cross-Origin Check',subtitle:'First wall. Runs before ANY auth. Blocks requests from untrusted browser origins.',
+ checks:[{icon:'🌍',text:'<strong>Checks the Origin header</strong> — which website/app is making the request.'},{icon:'📋',text:'<strong>Allowlist:</strong> only configured origins pass (e.g. https://app.fraudshield.io).'},{icon:'🔄',text:'<strong>Preflight OPTIONS:</strong> browsers ask permission first — answered without touching your code.'},{icon:'🛡️',text:'<strong>Why:</strong> without CORS, a malicious site could call your API using a logged-in user\'s cookies (CSRF-style).'}],
+ failBox:'Origin not allowed → <strong>403 Forbidden</strong> immediately. JWT filter, controllers, and DB never reached.',passBox:'Origin allowed. Moves to Gate 1 — JWT authentication.',
+ rightCards:[{head:'🌐 Spring Security CORS Config',type:'pre',content:'@Bean\nCorsConfigurationSource corsConfig() {\n  CorsConfiguration cfg = new CorsConfiguration();\n  cfg.setAllowedOrigins(List.of(\n    "https://app.fraudshield.io",\n    "http://localhost:3000"));\n  cfg.setAllowedMethods(\n    List.of("GET","POST","PUT","DELETE"));\n  cfg.setAllowedHeaders(\n    List.of("Authorization","Content-Type"));\n  return src;\n}'}]},
+{stage:2,badgeClass:'lb-security',badgeText:'GATE 1 — JWT EXTRACT',title:'JWT Filter — Token Extraction',subtitle:'JwtAuthenticationFilter runs on EVERY request before controllers. Step 1: find and decode the token.',
+ checks:[{icon:'🔍',text:'<strong>Looks for</strong> the Authorization header.'},{icon:'✂️',text:'<strong>Prefix check:</strong> must start with "Bearer ". Otherwise rejected as malformed.'},{icon:'📐',text:'<strong>Structure check:</strong> exactly 3 parts (header.payload.signature). Missing parts = 401.'},{icon:'📖',text:'<strong>Base64 decode:</strong> header reveals algorithm (HS256), payload reveals claims.'},{icon:'🚫',text:'<strong>No DB call yet:</strong> pure in-memory work. JWT is stateless.'}],
+ failBox:'Missing header, wrong prefix, or malformed → <strong>401 Unauthorized</strong>. Body: {"error":"MISSING_TOKEN"}',passBox:'Token decoded into 3 parts. Header confirms HS256. Passed to signature verifier.',
+ rightCards:[{head:'🔐 JWT — Three Parts',type:'token'},{head:'📖 Decoded Header',type:'pre',content:'// Part 1 decoded:\n{\n  "alg": "HS256",  // signing algorithm\n  "typ": "JWT"\n}\n// Rejects "none" (unsigned) or unexpected algo'}]},
+{stage:3,badgeClass:'lb-security',badgeText:'GATE 1 — SIGNATURE',title:'Cryptographic Signature Verification',subtitle:'The most critical check. Proves the token was created by THIS server and not modified since.',
+ checks:[{icon:'🔑',text:'<strong>Algorithm HMAC-SHA256</strong> using a 256-bit secret key (JWT_SECRET env var, never in code).'},{icon:'🧮',text:'<strong>How:</strong> server recomputes HMAC(header+"."+payload, secret) and compares with the 3rd part.'},{icon:'🛡️',text:'<strong>Tamper-proof:</strong> without the secret, forging a valid signature is computationally infeasible.'},{icon:'⚠️',text:'<strong>Attack:</strong> change roles to ROLE_ADMIN in the payload → signature no longer matches → instant 401.'}],
+ failBox:'Signature mismatch → <strong>401 INVALID_SIGNATURE</strong>. Source IP + endpoint logged at WARN.',passBox:'Signature verified. Token genuinely issued by this Auth Service, untampered.',
+ rightCards:[{head:'🔐 Verification Logic',type:'pre',content:'String input = base64(header)+"."+base64(payload);\nbyte[] expected = HMAC_SHA256(input, JWT_SECRET);\nbyte[] actual = base64Decode(signaturePart);\n// constant-time comparison (no timing attacks)\nboolean valid = MessageDigest.isEqual(expected, actual);\n// true: proceed  |  false: 401'},{head:'⚠️ Tamper Attempt (Rejected)',type:'pre',content:'// Original:  {"roles":["ROLE_USER"]}   sig: SflKxwRJ\n// Attacker:  {"roles":["ROLE_ADMIN"]}  sig: aB3xK9wr\n// Server compares: SflKxwRJ != aB3xK9wr\n// Result: 401 INVALID_SIGNATURE 🚫'}]},
+{stage:4,badgeClass:'lb-security',badgeText:'GATE 1 — CLAIMS',title:'JWT Claims Validation',subtitle:'Signature verified. Now check metadata: expired? Extract the user identity.',
+ checks:[{icon:'⏰',text:'<strong>exp (expiry):</strong> is now &lt; exp? Access tokens expire in 15 min. Expired = rejected even if signed.'},{icon:'🆔',text:'<strong>jti (JWT ID):</strong> unique UUID. Used as the Redis blacklist key at Gate 2.'},{icon:'👤',text:'<strong>userId extracted</strong> into SecurityContext — available in every controller.'},{icon:'🏷️',text:'<strong>roles extracted</strong> ["ROLE_USER"] for the authorization check at Gate 3.'}],
+ failBox:'Token expired → <strong>401 TOKEN_EXPIRED</strong>. Client must POST /api/auth/refresh to get a new pair.',passBox:'Claims valid. SecurityContext set: {userId="u-123", roles=[ROLE_USER]}',
+ rightCards:[{head:'📋 Decoded Payload (Claims)',type:'pre',content:'{\n  "userId": "u-123",\n  "email":  "user@fraudshield.io",\n  "roles":  ["ROLE_USER"],\n  "jti":    "jwt-abc-123",\n  "iat":    1699123456,\n  "exp":    1699124356\n  // now=1699123800, remaining ~9 min\n  // Status: NOT EXPIRED ✔\n}'},{head:'🔄 Refresh Flow (on expiry)',type:'pre',content:'// 401 TOKEN_EXPIRED -> client silently:\nPOST /api/auth/refresh\n{"refreshToken": "550e8400-..."}\n// 1. hash token (SHA-256)\n// 2. lookup in PostgreSQL\n// 3. check not expired, not used\n// 4. DELETE old (rotation)\n// 5. issue new JWT + refresh token\n// client retries original request'}]},
+{stage:5,badgeClass:'lb-security',badgeText:'GATE 2 — REVOCATION',title:'Redis Token Blacklist Check',subtitle:'JWTs can\'t be cancelled — they\'re self-contained. The blacklist is how logout works.',
+ checks:[{icon:'💡',text:'<strong>Problem:</strong> a JWT with 14 min left is valid after logout. If stolen, attacker has 14 min.'},{icon:'💾',text:'<strong>Solution:</strong> on logout store the jti in Redis with TTL = remaining life. Blacklisted jti = rejected.'},{icon:'⚡',text:'<strong>Redis GET is O(1)</strong> — under 0.5ms. Shared across all instances.'},{icon:'🧹',text:'<strong>Auto-cleanup:</strong> TTL matches token life, so entries auto-delete. Zero maintenance.'},{icon:'⚠️',text:'<strong>Fail-open:</strong> if Redis is down, this check is skipped (logged + alerted). Availability vs security tradeoff.'}],
+ failBox:'jti in blacklist → <strong>401 TOKEN_REVOKED</strong>. User logged out. Re-login required.',passBox:'jti not blacklisted. Token active. Continue to authorization.',
+ rightCards:[{head:'💾 Redis Blacklist Ops',type:'pre',content:'// ON LOGOUT: jti="jwt-abc-123", remaining=847s\nSETEX blacklist:jwt-abc-123 847 "revoked"\n\n// ON EACH REQUEST:\nString r = redis.get("blacklist:jwt-abc-123");\nif (r != null) throw new TokenRevokedException();\n// null -> valid, not revoked -> continue'},{head:'📊 Key Properties',type:'results',rows:[{key:'Key',val:'blacklist:{jti}',status:''},{key:'TTL',val:'remaining token life',status:''},{key:'Lookup',val:'~0.2ms O(1)',status:'✔'},{key:'Auto-expire',val:'yes, no cleanup job',status:'✔'},{key:'Shared',val:'yes, centralised',status:'✔'}]}]},
+{stage:6,badgeClass:'lb-security',badgeText:'GATE 3 — AUTHORIZATION',title:'Role-Based Access Control (RBAC)',subtitle:'Auth proved WHO you are. Authorization decides WHAT you can do. Both required.',
+ checks:[{icon:'🔑',text:'<strong>Two layers:</strong> URL-pattern rules in SecurityConfig + method-level @PreAuthorize.'},{icon:'🏷️',text:'<strong>Hierarchy:</strong> ROLE_USER &lt; ROLE_ANALYST &lt; ROLE_ADMIN &lt; ROLE_SUPER_ADMIN.'},{icon:'📍',text:'<strong>This endpoint</strong> /api/transactions requires any authenticated user (ROLE_USER+).'},{icon:'🚫',text:'<strong>Admin endpoints</strong> require ROLE_ANALYST+. A ROLE_USER with a valid JWT gets 403, not 401.'},{icon:'❓',text:'<strong>401 vs 403:</strong> 401 = "who are you?" 403 = "I know you — the answer is NO."'}],
+ failBox:'Insufficient role → <strong>403 Forbidden</strong>. Token valid, user known, but no permission. Never 401 here.',passBox:'ROLE_USER satisfies the endpoint. Forwarded to the controller.',
+ rightCards:[{head:'🔑 URL Rules (SecurityConfig)',type:'pre',content:'http.authorizeHttpRequests(auth -> auth\n  .requestMatchers("/api/auth/**").permitAll()\n  .requestMatchers("/actuator/health").permitAll()\n  .requestMatchers("/api/admin/**")\n    .hasAnyRole("ANALYST","ADMIN","SUPER_ADMIN")\n  .requestMatchers("/api/transactions/**")\n    .authenticated()\n  .anyRequest().denyAll())'},{head:'🏷️ @PreAuthorize',type:'pre',content:'// admin OR owner only:\n@GetMapping("/{id}")\n@PreAuthorize("hasRole(\'ADMIN\') or " +\n  "#id == authentication.principal.userId")\n\n// admin only:\n@DeleteMapping("/rules/{id}")\n@PreAuthorize("hasRole(\'ADMIN\')")'}]},
+{stage:7,badgeClass:'lb-validation',badgeText:'GATE 4 — INPUT VALIDATION',title:'Bean Validation — @Valid',subtitle:'Server-side validation is non-negotiable. Attackers bypass the UI and hit the API directly.',
+ checks:[{icon:'📏',text:'<strong>@NotNull + @Positive:</strong> amount must exist and be &gt; 0.'},{icon:'🌍',text:'<strong>@Size(3,3) + @Pattern:</strong> currency exactly 3 uppercase letters (ISO 4217: USD, EUR).'},{icon:'🏪',text:'<strong>@NotBlank:</strong> merchantId present, max 50 chars.'},{icon:'🛡️',text:'<strong>JPA = no SQL injection:</strong> parameterized queries internally. Malicious input treated as plain text.'}],
+ failBox:'Validation fails → <strong>400 Bad Request</strong> with a field-error map. No stack traces ever.',passBox:'All fields valid. DTO handed to the service layer.',
+ rightCards:[{head:'✅ Request DTO',type:'pre',content:'public class CreateTransactionRequest {\n  @NotNull @Positive @DecimalMax("1000000")\n  private BigDecimal amount;\n\n  @NotBlank @Size(min=3,max=3)\n  @Pattern(regexp="[A-Z]{3}")\n  private String currency;\n\n  @NotBlank @Size(max=50)\n  private String merchantId;\n\n  @DecimalMin("-90") @DecimalMax("90")\n  private Double latitude;\n}'},{head:'❌ 400 Response',type:'pre',content:'HTTP/1.1 400 Bad Request\n{\n  "status": 400,\n  "error": "VALIDATION_FAILED",\n  "fields": {\n    "amount": "Must be > 0",\n    "currency": "ISO 4217 e.g. USD"\n  }\n  // no stack trace, no class names\n}'}]},
+{stage:8,badgeClass:'lb-process',badgeText:'GATE 5 — BUSINESS LOGIC',title:'Service Layer — Persist & Publish',subtitle:'All 8 gates passed. Save the transaction and queue it for fraud evaluation.',
+ checks:[{icon:'🆔',text:'<strong>Server-generated UUID</strong> — clients cannot dictate their own IDs.'},{icon:'💾',text:'<strong>PostgreSQL write:</strong> status=PENDING. userId comes from the JWT, not the body — identity cannot be faked.'},{icon:'⚡',text:'<strong>Kafka publish (manual ACK):</strong> .get() blocks until broker confirms. 202 sent only after ACK.'},{icon:'🔁',text:'<strong>Async:</strong> the response does not wait for a fraud verdict. Rules Engine runs in background.'},{icon:'📝',text:'<strong>Audit log:</strong> recorded with actor userId, source IP, timestamp.'}],
+ failBox:'Kafka fails after 3 retries → <strong>503</strong>. @Transactional rolls back the DB insert — no orphans.',passBox:'Saved + Kafka ACK received. Returns 202 Accepted. Fraud evaluation running async.',
+ rightCards:[{head:'⚙️ Service.create()',type:'pre',content:'@Transactional\npublic TransactionResponse create(req, auth) {\n  String userId = auth.getName(); // from JWT\n  Transaction tx = Transaction.builder()\n    .id(UUID.randomUUID().toString())\n    .userId(userId)  // never trust client\n    .amount(req.getAmount())\n    .status(PENDING).build();\n  transactionRepo.save(tx);\n  kafkaTemplate.send("raw-transactions",\n    tx.getId(), toEvent(tx)).get(5, SECONDS);\n  auditService.log(userId,"TX_CREATED",tx.getId());\n  return toResponse(tx);\n}'}]},
+{stage:9,badgeClass:'lb-done',badgeText:'RESPONSE COMPLETE',title:'202 Accepted — All Gates Cleared',subtitle:'Processed in ~4ms through 8 gates. Fraud verdict arrives async in ~35ms. User alert in ~142ms.',
+ checks:[{icon:'📤',text:'<strong>202 vs 200:</strong> 202 = received and queued. Fraud verdict comes asynchronously.'},{icon:'🔒',text:'<strong>Security headers</strong> added automatically: X-Content-Type-Options, X-Frame-Options DENY, Strict-Transport-Security.'},{icon:'🔍',text:'<strong>Minimal body:</strong> only transactionId + status. No internal IDs, no DB keys, no server version.'},{icon:'⏱️',text:'<strong>Total ~4ms.</strong> Fraud eval +31ms. User email at ~142ms end-to-end.'}],
+ failBox:null,passBox:'Transaction queued. Rules Engine evaluating in background. User gets an alert if flagged.',
+ rightCards:[{head:'📤 HTTP Response',type:'pre',content:'HTTP/1.1 202 Accepted\nContent-Type: application/json\nX-Content-Type-Options: nosniff\nX-Frame-Options: DENY\nStrict-Transport-Security: max-age=31536000\n\n{\n  "transactionId": "tx-001",\n  "status": "PROCESSING",\n  "createdAt": "2026-10-28T14:32:11Z"\n}'},{head:'🕒 Gate Timeline',type:'results',rows:[{key:'0ms',val:'request received',status:'✔'},{key:'0.1ms',val:'CORS passed',status:'✔'},{key:'0.3ms',val:'JWT extracted',status:'✔'},{key:'0.7ms',val:'signature verified',status:'✔'},{key:'1.0ms',val:'claims valid',status:'✔'},{key:'1.3ms',val:'not blacklisted',status:'✔'},{key:'1.4ms',val:'ROLE_USER authorised',status:'✔'},{key:'1.6ms',val:'validation passed',status:'✔'},{key:'3.5ms',val:'DB + Kafka ACK',status:'✔'},{key:'4.1ms',val:'202 sent',status:'🎉'}]}]}
+];
+var current=0,playing=true,timer=null,INTERVAL=4500;
+function $(id){return document.getElementById(id);}
+function buildTrack(){var t=$('fv-track-inner');t.innerHTML='';STAGES.forEach(function(s,i){var d=document.createElement('div');d.className='fv-stage';d.id='fvs-'+i;d.innerHTML='<div class="fv-stage-circle">'+s.icon+'</div><div class="fv-stage-label" style="white-space:pre-line">'+s.label+'</div>';d.addEventListener('click',function(){goTo(i);});t.appendChild(d);if(i<STAGES.length-1){var c=document.createElement('div');c.className='fv-connector';c.id='fvc-c'+i;t.appendChild(c);}});}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function tokenCard(){return '<div class="fv-token-parts"><div class="fv-token-part tp-header"><span class="fv-token-part-label">PART 1 — Header (algorithm)</span>{"alg":"HS256","typ":"JWT"}</div><div style="text-align:center;font-size:10px;color:var(--text-muted);padding:3px 0">dot separator</div><div class="fv-token-part tp-payload"><span class="fv-token-part-label">PART 2 — Payload (claims)</span>{"userId":"u-123","roles":["ROLE_USER"],"jti":"jwt-abc-123","exp":1699124356}</div><div style="text-align:center;font-size:10px;color:var(--text-muted);padding:3px 0">dot separator</div><div class="fv-token-part tp-sig"><span class="fv-token-part-label">PART 3 — Signature HMAC_SHA256(p1+"."+p2, JWT_SECRET)</span>SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</div></div>';}
+function renderStep(idx){
+  var s=STEPS[idx];if(!s)return;
+  STAGES.forEach(function(_,i){var el=$('fvs-'+i);if(!el)return;el.classList.remove('fs-active','fs-done');if(i<s.stage)el.classList.add('fs-done');if(i===s.stage)el.classList.add('fs-active');});
+  for(var i=0;i<STAGES.length-1;i++){var c=$('fvc-c'+i);if(c)c.classList.toggle('fc-active',i===s.stage-1);}
+  var badge=$('fv-badge');badge.className='fv-layer-badge '+s.badgeClass;badge.textContent=s.badgeText;
+  $('fv-title-wrap').innerHTML='<h2 id="fv-step-title">'+s.title+'</h2><p id="fv-step-subtitle">'+s.subtitle+'</p>';
+  var lh='<div class="fv-section-label">What happens at this gate</div><ul class="fv-checks">';
+  s.checks.forEach(function(c){lh+='<li class="fv-check"><span class="ck-icon">'+c.icon+'</span><span>'+c.text+'</span></li>';});
+  lh+='</ul>';
+  if(s.failBox)lh+='<div class="fv-fail-box"><strong>🚫 If this gate FAILS:</strong><br>'+s.failBox+'</div>';
+  if(s.passBox)lh+='<div class="fv-pass-box"><strong>✅ If this gate PASSES:</strong><br>'+s.passBox+'</div>';
+  $('fv-left-content').innerHTML=lh;
+  var rh='';
+  if(s.rightCards)s.rightCards.forEach(function(card){rh+='<div class="fv-detail-card"><div class="fv-detail-card-head">'+card.head+'</div><div class="fv-detail-card-body">';if(card.type==='pre')rh+='<pre>'+esc(card.content)+'</pre>';else if(card.type==='token')rh+=tokenCard();else if(card.type==='results'){card.rows.forEach(function(r){rh+='<div class="fv-result-row"><span class="fv-result-key">'+esc(r.key)+'</span><span class="fv-result-val">'+esc(r.val)+'</span><span class="fv-result-status">'+r.status+'</span></div>';});}rh+='</div></div>';});
+  $('fv-right-content').innerHTML=rh;
+  $('fv-counter').textContent='Step '+(idx+1)+' of '+STEPS.length;
+}
+function goTo(idx){setPlaying(false);current=Math.max(0,Math.min(STEPS.length-1,idx));renderStep(current);}
+function advance(){if(current>=STEPS.length-1){setPlaying(false);return;}current++;renderStep(current);}
+function setPlaying(val){playing=val;var b=$('fvc-play');if(b)b.innerHTML=playing?'&#9208; Pause':'&#9654; Play';clearInterval(timer);if(playing)timer=setInterval(advance,INTERVAL);}
+function restart(){setPlaying(false);current=0;renderStep(0);setTimeout(function(){setPlaying(true);},300);}
+function openModal(){$('flow-modal').classList.remove('flow-hidden');buildTrack();restart();}
+function closeModal(){$('flow-modal').classList.add('flow-hidden');setPlaying(false);}
+function init(){
+  if(!$('flow-fab'))return;
+  $('flow-fab').addEventListener('click',openModal);
+  $('flow-close').addEventListener('click',closeModal);
+  $('flow-backdrop').addEventListener('click',closeModal);
+  $('fvc-play').addEventListener('click',function(){if(current>=STEPS.length-1){restart();return;}setPlaying(!playing);});
+  $('fvc-prev').addEventListener('click',function(){goTo(current-1);});
+  $('fvc-next').addEventListener('click',function(){goTo(current+1);});
+  $('fvc-restart').addEventListener('click',restart);
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+})();
+
+</script>
+<script>
+(function(){
+  'use strict';
+  var KEY = 'fraudshield-lang';
+  function apply(lang){
+    document.querySelectorAll('.i18n').forEach(function(el){
+      // Store original English HTML once
+      if(!el.hasAttribute('data-en-html')){
+        el.setAttribute('data-en-html', el.innerHTML);
+      }
+      if(lang === 'hi'){
+        var hi = el.getAttribute('data-hi');
+        if(hi) el.innerHTML = hi;
+      } else {
+        el.innerHTML = el.getAttribute('data-en-html');
+      }
+    });
+    document.querySelectorAll('.lang-toggle-btn').forEach(function(b){
+      b.textContent = lang === 'hi' ? 'हिं' : 'EN';
+      b.title = lang === 'hi' ? 'Switch to English' : 'Hinglish mein dekho';
+    });
+    try{ localStorage.setItem(KEY, lang); }catch(e){}
+  }
+  function init(){
+    var saved = 'en';
+    try{ saved = localStorage.getItem(KEY) || 'en'; }catch(e){}
+    apply(saved);
+    document.querySelectorAll('.lang-toggle-btn').forEach(function(b){
+      b.addEventListener('click', function(){
+        var cur = 'en';
+        try{ cur = localStorage.getItem(KEY) || 'en'; }catch(e){}
+        apply(cur === 'hi' ? 'en' : 'hi');
+      });
+    });
+  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+})();
+</script>
+</body>
+</html>
