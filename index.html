@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FraudShield — Architecture Guide</title>
   <meta name="description" content="Real-time event-driven fraud detection system — architecture guide, HLD, service catalog, auth flows, and operations." />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMGI1ZmZmIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDBhOThmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHBhdGggZD0iTTE2IDJMMjkgN3YxMGMwIDcuNS01LjUgMTIuNS0xMyAxNEM4LjUgMjkuNSAzIDI0LjUgMyAxN1Y3eiIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjE2IiB5PSIyMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkludGVyLEFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI4MDAiIGZvbnQtc2l6ZT0iMTUiIGZpbGw9IndoaXRlIj5GPC90ZXh0Pjwvc3ZnPg==" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236d28d9'/%3E%3Cstop offset='100%25' stop-color='%23f59e0b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2L29 7v10c0 7.5-5.5 12.5-13 14C8.5 29.5 3 24.5 3 17V7z' fill='url(%23g)'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-weight='800' font-size='15' fill='white'%3EF%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-:root{--bg:#f7f8fa;--surface:#fff;--surface-2:#f0f2f5;--border:#e3e6ea;--text:#1f2733;--text-soft:#4b5563;--text-muted:#7a8595;--brand:#0b5fff;--brand-ink:#0a3fb0;--brand-soft:#e7f0ff;--accent:#00a98f;--warn:#c9770a;--danger:#d64545;--code-bg:#f3f5f8;--code-ink:#b1246b;--radius:12px;--radius-sm:8px;--sidebar-w:300px;--maxcol:860px;--sans:'Inter',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',Consolas,'Courier New',monospace;--shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 12px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.06);--shadow-lg:0 10px 28px rgba(0,0,0,.13),0 4px 10px rgba(0,0,0,.08);}
-html[data-theme="dark"]{--bg:#0e1420;--surface:#141c2b;--surface-2:#1b2435;--border:#273146;--text:#e6ebf2;--text-soft:#b7c0ce;--text-muted:#8491a3;--brand:#5b9dff;--brand-ink:#9cc2ff;--brand-soft:#16233c;--accent:#30d6b8;--warn:#e2a33d;--danger:#ff6b6b;--code-bg:#1b2435;--code-ink:#f07ab0;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.35);--shadow-lg:0 10px 28px rgba(0,0,0,.45);}
+:root{--bg:#f7f8fa;--surface:#fff;--surface-2:#f0f2f5;--border:#e3e6ea;--text:#1f2733;--text-soft:#4b5563;--text-muted:#7a8595;--brand:#6d28d9;--brand-ink:#4c1d95;--brand-soft:#efe7ff;--accent:#f59e0b;--warn:#c9770a;--danger:#d64545;--code-bg:#f3f5f8;--code-ink:#b1246b;--radius:12px;--radius-sm:8px;--sidebar-w:300px;--maxcol:860px;--sans:'Inter',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',Consolas,'Courier New',monospace;--shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 12px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.06);--shadow-lg:0 10px 28px rgba(0,0,0,.13),0 4px 10px rgba(0,0,0,.08);}
+html[data-theme="dark"]{--bg:#0e1420;--surface:#141c2b;--surface-2:#1b2435;--border:#273146;--text:#e6ebf2;--text-soft:#b7c0ce;--text-muted:#8491a3;--brand:#a78bfa;--brand-ink:#c4b5fd;--brand-soft:#241a3d;--accent:#fbbf24;--warn:#e2a33d;--danger:#ff6b6b;--code-bg:#1b2435;--code-ink:#f07ab0;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.35);--shadow-lg:0 10px 28px rgba(0,0,0,.45);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;font-size:16px;}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.7;transition:background .25s,color .25s;}
@@ -210,6 +210,9 @@ html[data-theme="dark"] .chip.err{background:#2b0f0f;color:#ff6b6b;}
       <a href="#svc-admin">Admin API</a>
       <a href="#svc-auth">Auth Service</a>
       <a href="#svc-notification">Notification Worker</a>
+      <a href="#svc-backend">🔧 Backend (Code Deep Dive)</a>
+      <a href="#svc-eureka">🧭 Eureka Service Discovery</a>
+      <a href="#svc-postman">📮 Postman — Modify the Collection</a>
       <span class="toc-chapter">How It Works</span>
       <a href="#e2e-flow"><span class="num">06</span> End-to-End Flow</a>
       <a href="#config-model"><span class="num">07</span> Configuration Model</a>
@@ -219,6 +222,15 @@ html[data-theme="dark"] .chip.err{background:#2b0f0f;color:#ff6b6b;}
       <a href="#auth-lambda" class="sub">Auth &amp; Token Flow</a>
       <a href="#observability">Observability</a>
       <a href="#failures">Failure Scenarios</a>
+      <span class="toc-chapter">Frontend (UI)</span>
+      <a href="#ui-overview">UI Overview</a>
+      <a href="#ui-stack">Frontend Stack</a>
+      <a href="#ui-login" class="sub">Login Screen</a>
+      <a href="#ui-dashboard" class="sub">Dashboard</a>
+      <a href="#ui-transactions" class="sub">Transactions + Drawer</a>
+      <a href="#ui-rules" class="sub">Fraud Rules</a>
+      <a href="#ui-audit" class="sub">Audit Log</a>
+      <a href="#ui-components">Component Reference</a>
       <span class="toc-chapter">Operations</span>
       <a href="#build-deploy">Build &amp; Deployment</a>
       <span class="toc-chapter">Reference</span>
@@ -542,6 +554,276 @@ if (count &gt; 5) score += 40;</code></pre>
 
       <hr class="rule" />
 
+      <section id="svc-backend">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>🔧 Backend — Code Deep Dive</h2>
+
+        <div class="callout info"><span class="ico">🧭</span><div class="body"><p><strong>How to read this section.</strong> The six services above describe the <em>target</em> microservice architecture. The code that actually ships in <code>backend/</code> is a <strong>single Spring Boot application</strong> (one <code>pom.xml</code>, one deployable JAR) that consolidates those capabilities into controllers and <code>@Service</code> beans. This section documents that real code — every class, every public method, and what each one does.</p></div></div>
+
+        <dl class="facts">
+          <dt>Shape</dt><dd>Single Spring Boot app (modular monolith)</dd>
+          <dt>Base package</dt><dd><code>com.fraudshield</code></dd>
+          <dt>Controllers</dt><dd>5 (<code>Auth</code>, <code>Transaction</code>, <code>Admin</code>, <code>Rule</code>, <code>Config</code>)</dd>
+          <dt>Service beans</dt><dd>7 (<code>Auth</code>, <code>Jwt</code>, <code>CustomUserDetails</code>, <code>Transaction</code>, <code>RulesEngine</code>, <code>Rule</code>, <code>Audit</code>)</dd>
+          <dt>Persistence</dt><dd>Spring Data JPA, H2 (dev) / PostgreSQL (prod)</dd>
+          <dt>Fraud scoring</dt><dd>Deterministic weighted rules (no ML)</dd>
+        </dl>
+
+        <h3>Layered Architecture</h3>
+        <p>Requests flow through a classic Spring layering: the <code>JwtAuthenticationFilter</code> authenticates, a <strong>controller</strong> maps the HTTP endpoint, a <strong>service</strong> holds the business logic, and a <strong>repository</strong> talks to the database. DTOs cross the controller boundary; entities stay inside the service/repository layers.</p>
+        <pre><code>HTTP ─▶ JwtAuthenticationFilter ─▶ Controller ─▶ Service ─▶ Repository ─▶ DB
+                                        │             │
+                                     (DTOs)       (entities)</code></pre>
+
+        <h3>Controllers — the HTTP surface</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Controller</th><th>Base path</th><th>Endpoint → method</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="4"><strong>AuthController</strong></td><td rowspan="4"><code>/api/auth</code></td><td><code>POST /login</code> → <code>login()</code></td><td>Validates credentials, returns access + refresh tokens.</td></tr>
+            <tr><td><code>POST /refresh</code> → <code>refresh()</code></td><td>Exchanges a valid refresh token for a fresh token pair.</td></tr>
+            <tr><td><code>POST /logout</code> → <code>logout()</code></td><td>Revokes the caller's active refresh tokens; returns 204.</td></tr>
+            <tr><td><code>GET /me</code> → <code>me()</code></td><td>Returns the current user (name, email, role) from the JWT subject.</td></tr>
+            <tr><td rowspan="3"><strong>TransactionController</strong></td><td rowspan="3"><code>/api/transactions</code></td><td><code>GET /</code> → <code>list()</code></td><td>Lists transactions with optional <code>q</code>/<code>verdict</code>/<code>status</code> filters.</td></tr>
+            <tr><td><code>GET /{id}</code> → <code>get()</code></td><td>Fetches one transaction with its triggered rules.</td></tr>
+            <tr><td><code>POST /</code> → <code>create()</code></td><td>Creates a transaction, scores it, returns <code>202 Accepted</code>.</td></tr>
+            <tr><td rowspan="3"><strong>AdminController</strong></td><td rowspan="3"><code>/api/admin</code></td><td><code>GET /transactions</code> → <code>transactions()</code></td><td>Analyst view of all transactions (same filters as above).</td></tr>
+            <tr><td><code>PUT /verdicts/{id}</code> → <code>applyVerdict()</code></td><td>Overrides a verdict: <code>FALSE_POSITIVE</code> or <code>CONFIRMED_FRAUD</code>.</td></tr>
+            <tr><td><code>GET /audit-logs</code> → <code>auditLogs()</code></td><td>Returns the audit trail. <span class="chip warn">ADMIN / SUPER_ADMIN</span></td></tr>
+            <tr><td rowspan="2"><strong>RuleController</strong></td><td rowspan="2"><code>/api/admin/rules</code></td><td><code>GET /</code> → <code>list()</code></td><td>Lists fraud rules sorted by weight (descending).</td></tr>
+            <tr><td><code>PUT /{id}</code> → <code>update()</code></td><td>Enables/disables a rule or changes its weight. <span class="chip warn">ADMIN / SUPER_ADMIN</span></td></tr>
+            <tr><td><strong>ConfigController</strong></td><td><code>/api/config</code></td><td>config endpoint(s)</td><td>Exposes runtime config such as mock-mode state to the UI.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Service Beans — the business logic</h3>
+
+        <h4>RulesEngineService <span class="chip info">the analytical core</span></h4>
+        <p>Scores a transaction against the enabled fraud rules and decides a verdict. This is where "is this fraud?" is answered.</p>
+        <ul>
+          <li><code>score(Transaction)</code> — loads enabled rules via <code>findByEnabledTrue()</code>, sums the weight of every rule that <code>fires()</code>, and returns a <code>ScoreResult</code>. Score <strong>≥ 50 → FLAGGED</strong> (status <code>PENDING</code>); otherwise <strong>PASSED</strong>.</li>
+          <li><code>fires(FraudRule, Transaction)</code> — the per-rule heuristic (demo-grade): <code>amount</code> fires when amount &gt; 2000; <code>nightowl</code> fires when amount &gt; 1000 and the UTC hour is 2–5; <code>velocity</code>/<code>geo</code>/<code>duplicate</code> fire on a deterministic hash bucket of <code>id + merchantId</code>.</li>
+          <li><code>bucket(Transaction, salt)</code> — stable pseudo-random 0–99 bucket so the same transaction always scores the same way (reproducible demo).</li>
+          <li><code>ScoreResult</code> (record) — carries <code>score</code>, <code>verdict</code>, <code>status</code>, and the list of fired rule IDs.</li>
+        </ul>
+        <div class="callout warn"><span class="ico">⚠️</span><div class="body"><p><strong>Reality check.</strong> The live code uses fixed thresholds and a hash bucket — not Redis sorted-set velocity windows or a 30-day average. Those (and the weights table above) describe the intended production design.</p></div></div>
+
+        <h4>TransactionService</h4>
+        <ul>
+          <li><code>create(request, userId, ip)</code> — builds a <code>Transaction</code> (generates a <code>tx-</code> id, derives country from lat/long), calls <code>RulesEngineService.score()</code>, persists it, writes an audit entry, returns a <code>CreateTransactionResponse</code>.</li>
+          <li><code>list(q, verdict, status)</code> — builds a JPA <code>Specification</code> from the filters, returns newest-first; hides seeded demo rows when mock mode is off.</li>
+          <li><code>get(id)</code> — fetches one transaction or throws <code>NotFoundException</code>.</li>
+          <li><code>applyVerdict(id, decision, actor, ip)</code> — analyst override: <code>FALSE_POSITIVE</code> → status <code>OVERRIDDEN</code>; <code>CONFIRMED_FRAUD</code> → flags <code>confirmedFraud</code>; logs the action.</li>
+          <li><code>primeSequence()</code> — bumps the id counter above any seeded ids so generated ids never collide.</li>
+          <li><em>helpers:</em> <code>buildSpec()</code>, <code>ruleIndex()</code>, <code>toResponse()</code>, <code>deriveCountry()</code>.</li>
+        </ul>
+
+        <h4>AuthService &amp; JwtService <span class="chip info">authentication</span></h4>
+        <ul>
+          <li><strong>AuthService.</strong><code>login()</code> — verifies the BCrypt password, audits, issues tokens. <code>refresh()</code> — one-time-use rotation: marks the old refresh token used, issues a new pair. <code>logout()</code> — marks all active refresh tokens used. <code>me()</code> — returns the current <code>UserDto</code>. <code>issueTokens()</code> stores a <strong>SHA-256 hash</strong> of the refresh token (never the raw value).</li>
+          <li><strong>JwtService.</strong><code>generateAccessToken()</code> — signs an HS256 JWT with <code>subject</code>, <code>role</code>, <code>name</code> claims (15-min TTL). <code>generateRawRefreshToken()</code> — 256-bit random, URL-safe. <code>parseAndValidate()</code> — verifies signature + expiry. <code>sha256Hex()</code> — hashes refresh tokens for storage.</li>
+          <li><strong>CustomUserDetailsService.</strong><code>loadUserByUsername(email)</code> — Spring Security hook; loads the user and maps their role to a granted authority.</li>
+        </ul>
+
+        <h4>RuleService</h4>
+        <ul>
+          <li><code>list()</code> — returns all rules sorted by weight (highest first).</li>
+          <li><code>update(id, request, actor, ip)</code> — toggles <code>enabled</code> and/or changes <code>weight</code>, builds a human-readable audit message describing exactly what changed, and persists it.</li>
+        </ul>
+
+        <h4>AuditService <span class="chip info">cross-cutting</span></h4>
+        <ul>
+          <li><code>log(actor, action, ip, icon)</code> — appends an immutable <code>AuditLog</code> row (called by nearly every write path).</li>
+          <li><code>recent()</code> — returns the trail newest-first; filters seeded rows when mock mode is off.</li>
+          <li><code>resolveClientIp(request)</code> — prefers the first <code>X-Forwarded-For</code> hop, else the remote address.</li>
+        </ul>
+
+        <h3>Request lifecycle — a POST /api/transactions</h3>
+        <ol class="steps">
+          <li><span class="step-num">1</span><div class="step-body"><code>JwtAuthenticationFilter</code> validates the Bearer token and sets the security context.</div></li>
+          <li><span class="step-num">2</span><div class="step-body"><code>TransactionController.create()</code> reads the JWT subject as the user id and delegates to the service.</div></li>
+          <li><span class="step-num">3</span><div class="step-body"><code>TransactionService.create()</code> builds the entity and calls <code>RulesEngineService.score()</code>.</div></li>
+          <li><span class="step-num">4</span><div class="step-body"><code>RulesEngineService</code> sums enabled-rule weights → <code>score</code> ≥ 50 is <code>FLAGGED</code>.</div></li>
+          <li><span class="step-num">5</span><div class="step-body">The verdict is persisted, <code>AuditService.log()</code> records it, and a <code>202 Accepted</code> returns.</div></li>
+        </ol>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="svc-eureka">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>🧭 Eureka Service Discovery</h2>
+
+        <p>The backend registers itself with a <strong>Netflix Eureka</strong> server at startup so that other services can find it by logical name instead of a hardcoded host and port. Eureka is the <em>service registry</em> — the phone book of the system: every instance checks in, sends a periodic heartbeat, and is removed automatically if it stops responding.</p>
+
+        <div class="callout info"><span class="ico">💡</span><div class="body"><p><strong>Why discovery matters.</strong> In a microservice deployment, instances come and go and their IPs change. Rather than wiring one service to <code>http://10.0.1.7:8082</code>, a caller asks Eureka for <code>FRAUDSHIELD-BACKEND</code> and gets a live address. This is what lets the Rules Engine scale to 6× replicas without anyone editing a config file.</p></div></div>
+
+        <dl class="facts">
+          <dt>Role</dt><dd>Eureka <strong>client</strong> (registers &amp; discovers)</dd>
+          <dt>Starter</dt><dd><code>spring-cloud-starter-netflix-eureka-client</code></dd>
+          <dt>Spring Cloud</dt><dd><code>2023.0.1</code></dd>
+          <dt>Registry server</dt><dd><code>http://localhost:8761/eureka/</code></dd>
+          <dt>Registers as</dt><dd><code>fraudshield-backend:8080</code></dd>
+          <dt>Toggle</dt><dd><code>EUREKA_ENABLED</code> (default <code>true</code>)</dd>
+        </dl>
+
+        <h3>Configuration (<code>application.yml</code>)</h3>
+        <p>Discovery is on by default and can be disabled with a single environment variable — handy for running the backend standalone in local dev or tests.</p>
+        <pre><code>spring:
+  application:
+    name: fraudshield-backend     # the name peers look up in Eureka
+  cloud:
+    discovery:
+      enabled: ${EUREKA_ENABLED:true}
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: true     # publish this instance to the registry
+    fetch-registry: true           # pull the list of other services
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true        # register by IP, not hostname
+    instance-id: ${spring.application.name}:${server.port}</code></pre>
+
+        <div class="table-wrap"><table>
+          <thead><tr><th>Property</th><th>Value</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>eureka.client.enabled</code></td><td><code>${EUREKA_ENABLED:true}</code></td><td>Master switch for the Eureka client. Set <code>EUREKA_ENABLED=false</code> to run with no registry.</td></tr>
+            <tr><td><code>register-with-eureka</code></td><td><code>true</code></td><td>Publishes this backend instance to the registry so others can find it.</td></tr>
+            <tr><td><code>fetch-registry</code></td><td><code>true</code></td><td>Downloads and caches the registry so this app can call peers by name.</td></tr>
+            <tr><td><code>service-url.defaultZone</code></td><td><code>${EUREKA_URL:…:8761/eureka/}</code></td><td>Where the Eureka server lives. Override with <code>EUREKA_URL</code> in other environments.</td></tr>
+            <tr><td><code>instance.prefer-ip-address</code></td><td><code>true</code></td><td>Registers by IP instead of hostname — avoids DNS issues in containers.</td></tr>
+            <tr><td><code>instance.instance-id</code></td><td><code>name:port</code></td><td>Unique id for this instance, e.g. <code>fraudshield-backend:8080</code>.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Environment overrides</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Variable</th><th>Default</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>EUREKA_ENABLED</code></td><td><code>true</code></td><td><code>false</code> → backend runs standalone, no registration or lookup.</td></tr>
+            <tr><td><code>EUREKA_URL</code></td><td><code>http://localhost:8761/eureka/</code></td><td>Points the client at a different Eureka server (e.g. a prod cluster).</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>How registration works</h3>
+        <ol class="steps">
+          <li><span class="step-num">1</span><div class="step-body"><strong>Start Eureka first.</strong> The registry server must be up on <code>:8761</code> before the backend boots (or the client will retry until it is).</div></li>
+          <li><span class="step-num">2</span><div class="step-body"><strong>Register.</strong> On startup the backend POSTs its instance info (<code>fraudshield-backend</code>, IP, port <code>8080</code>) to the Eureka server.</div></li>
+          <li><span class="step-num">3</span><div class="step-body"><strong>Heartbeat.</strong> The client renews its lease every ~30s. Miss enough heartbeats and Eureka evicts the instance.</div></li>
+          <li><span class="step-num">4</span><div class="step-body"><strong>Discover.</strong> With <code>fetch-registry: true</code>, the backend caches the registry and can resolve other services by their logical name.</div></li>
+          <li><span class="step-num">5</span><div class="step-body"><strong>Shut down.</strong> On graceful stop the client de-registers so no caller is routed to a dead instance.</div></li>
+        </ol>
+
+        <div class="callout warn"><span class="ico">⚠️</span><div class="body"><p><strong>Dev tip.</strong> Running just the backend without a registry? Set <code>EUREKA_ENABLED=false</code> — otherwise you'll see connection-refused retries in the logs while it tries to reach <code>:8761</code>. The app still works; the warnings are only about discovery.</p></div></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="svc-postman">
+        <span class="section-kicker">The 6 Services</span>
+        <h2>📮 Postman — Modify the Collection</h2>
+
+        <p>The repo ships an importable collection at <code>Postman/FraudShield.postman_collection.json</code>. It is a <strong>v2.1.0</strong> collection that already wires up authentication, variables, and token auto-capture — so extending it is mostly a matter of knowing where each piece lives. This section is a guide to <em>changing and growing</em> the collection, not just running it.</p>
+
+        <div class="callout info"><span class="ico">🧩</span><div class="body"><p><strong>Anatomy.</strong> A Postman collection is JSON with four parts that matter here: <code>variable</code> (collection variables), <code>auth</code> (collection-wide auth), <code>item</code> (folders and requests, nestable), and per-request <code>event</code> scripts (pre-request / test). Edit any of them in the Postman UI, or directly in the JSON file and re-import.</p></div></div>
+
+        <h3>How this collection is wired</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Piece</th><th>Where</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Collection variables</strong></td><td><code>variable[]</code></td><td><code>baseUrl</code>, <code>accessToken</code>, <code>refreshToken</code>, <code>lastTxId</code> — shared across every request.</td></tr>
+            <tr><td><strong>Collection auth</strong></td><td><code>auth</code> (top level)</td><td>Bearer token bound to <code>{{accessToken}}</code>; inherited by every request unless overridden.</td></tr>
+            <tr><td><strong>Folders</strong></td><td><code>item[]</code> with nested <code>item[]</code></td><td>Auth, Transactions, Admin, Fraud Rules, Config.</td></tr>
+            <tr><td><strong>Token capture</strong></td><td>Login request <code>event</code> → <code>test</code> script</td><td>Saves <code>accessToken</code>/<code>refreshToken</code> via <code>pm.collectionVariables.set(...)</code>.</td></tr>
+            <tr><td><strong>Chaining</strong></td><td>Create-tx <code>test</code> script</td><td>Saves <code>transactionId</code> into <code>lastTxId</code> so later requests reuse it.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>1. Add a new request to a folder</h3>
+        <p>Append a request object inside the target folder's <code>item[]</code> array. The minimum shape:</p>
+        <pre><code>{
+  "name": "Create Transaction — custom",
+  "request": {
+    "method": "POST",
+    "header": [{ "key": "Content-Type", "value": "application/json" }],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"amount\": 999.00,\n  \"currency\": \"EUR\",\n  \"merchantId\": \"MERCH-TEST-01\"\n}"
+    },
+    "url": {
+      "raw": "{{baseUrl}}/api/transactions",
+      "host": ["{{baseUrl}}"],
+      "path": ["api", "transactions"]
+    }
+  }
+}</code></pre>
+        <div class="callout tip"><span class="ico">✅</span><div class="body"><p>Always build the URL with <code>{{baseUrl}}</code> and a split <code>path</code> array — never hardcode <code>http://localhost:8080</code>. That keeps the collection portable across environments.</p></div></div>
+
+        <h3>2. Change the body or query params</h3>
+        <p>The request body lives in <code>request.body.raw</code> as an escaped JSON <em>string</em> (note the <code>\n</code> and <code>\"</code>). Edit it in Postman's body editor to avoid escaping by hand. For query params, add a <code>query</code> array and mirror it in <code>url.raw</code>:</p>
+        <pre><code>"url": {
+  "raw": "{{baseUrl}}/api/transactions?verdict=FLAGGED&status=PENDING",
+  "host": ["{{baseUrl}}"],
+  "path": ["api", "transactions"],
+  "query": [
+    { "key": "verdict", "value": "FLAGGED" },
+    { "key": "status",  "value": "PENDING" }
+  ]
+}</code></pre>
+
+        <h3>3. Add or reuse a variable</h3>
+        <p>Add a new entry to the top-level <code>variable[]</code> array, then reference it anywhere as <code>{{yourVar}}</code>:</p>
+        <pre><code>{ "key": "merchantId", "value": "MERCH-TEST-01", "type": "string" }</code></pre>
+        <p>Read it in a script with <code>pm.collectionVariables.get('merchantId')</code> and write it with <code>pm.collectionVariables.set('merchantId', value)</code>. Prefer <strong>collection</strong> variables for values shared by many requests; use an <strong>environment</strong> when the same collection must run against dev / staging / prod.</p>
+
+        <h3>4. Capture a value from a response (chaining)</h3>
+        <p>Add a <code>test</code> script to the request's <code>event[]</code>. This is exactly how the login request feeds the token into every later call:</p>
+        <pre><code>"event": [{
+  "listen": "test",
+  "script": {
+    "type": "text/javascript",
+    "exec": [
+      "const json = pm.response.json();",
+      "pm.test('status 200', () => pm.response.to.have.status(200));",
+      "pm.collectionVariables.set('accessToken', json.accessToken);",
+      "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+    ]
+  }
+}]</code></pre>
+        <p>Use the same pattern to grab a new id — e.g. <code>pm.collectionVariables.set('lastTxId', json.transactionId)</code> — then reference <code>{{lastTxId}}</code> in the next request's URL.</p>
+
+        <h3>5. Override auth for one request</h3>
+        <p>Every request inherits the collection's Bearer auth. For a public endpoint (login, refresh, mock-status) opt out per request so no stale token is sent:</p>
+        <pre><code>"request": {
+  "auth": { "type": "noauth" },
+  "method": "POST",
+  "...": "..."
+}</code></pre>
+
+        <h3>6. Switch user / role</h3>
+        <p>Role-gated endpoints (rule writes need ADMIN) depend on <em>which</em> login you ran last, because each login overwrites <code>accessToken</code>. To test a 403, run <strong>Login (HK Analyst)</strong>, then call a rule <code>PUT</code>. To duplicate a login for another account, copy the login request and change only the email/password in the body.</p>
+
+        <h3>7. Add the mock-mode header</h3>
+        <p>To force seeded data on a list request, add the optional override header; omit it to use the server config:</p>
+        <pre><code>"header": [
+  { "key": "X-Mock-Response", "value": "true" }
+]</code></pre>
+
+        <h3>Re-import &amp; verify</h3>
+        <ol class="steps">
+          <li><span class="step-num">1</span><div class="step-body">Edit the JSON (or edit in Postman and <strong>Export</strong> → overwrite the file to keep the repo in sync).</div></li>
+          <li><span class="step-num">2</span><div class="step-body">In Postman, <strong>Import</strong> the file again — choose <em>Replace</em> so you don't end up with duplicates.</div></li>
+          <li><span class="step-num">3</span><div class="step-body">Run <strong>Auth → 1. Login (HK Admin)</strong> first to refresh <code>{{accessToken}}</code>, then your new request.</div></li>
+          <li><span class="step-num">4</span><div class="step-body">Watch the created data appear live in the UI at <code>http://localhost:5173</code>.</div></li>
+        </ol>
+
+        <div class="callout warn"><span class="ico">⚠️</span><div class="body"><p><strong>Keep the JSON valid.</strong> A trailing comma or an unescaped quote in a <code>raw</code> body will make Postman reject the import. When in doubt, make the change in the Postman UI and export rather than hand-editing the escaped body string.</p></div></div>
+      </section>
+
+      <hr class="rule" />
+
       <section id="e2e-flow">
         <span class="section-kicker">How It Works</span>
         <h2>End-to-End Request Flow</h2>
@@ -707,6 +989,284 @@ Server:
 
       <hr class="rule" />
 
+            <section id="ui-overview">
+        <span class="section-kicker">Frontend (UI)</span>
+        <h2>UI Overview — The Analyst Dashboard</h2>
+        <div class="callout tip"><span class="ico">🖥️</span><div class="body"><p><strong class="i18n" data-hi="Ek line mein:">In one line:</strong> <span class="i18n" data-hi="FraudShield ka frontend ek React + Vite dashboard hai jahaan fraud analysts flagged payments ko dekhte, review karte aur override karte hain — bilkul waise jaise ek real bank ke fraud team ka internal tool hota hai.">The FraudShield frontend is a React + Vite dashboard where fraud analysts view, review, and override flagged payments — exactly like the internal tool a real bank's fraud team would use.</span></p></div></div>
+        <p>So far this guide has covered the <strong>backend</strong> — the services, Kafka pipeline, and security that decide whether a payment is fraud. This part covers the <strong>frontend</strong>: the screen a human fraud analyst actually looks at. The backend makes the decision; the frontend lets a person review and act on it.</p>
+        <p>The dashboard lives in the <code>UI/</code> folder and runs completely on mock data — no backend connection needed. It is the visual counterpart to the Admin API service documented earlier.</p>
+        <div class="card-grid">
+          <div class="card"><div class="card-ico">📊</div><h4>Dashboard</h4><p>KPI cards and a live list of recently flagged transactions.</p></div>
+          <div class="card"><div class="card-ico">💳</div><h4>Transactions</h4><p>Searchable, filterable table with a detail drawer and verdict override.</p></div>
+          <div class="card"><div class="card-ico">⚙️</div><h4>Fraud Rules</h4><p>Enable/disable detection rules (admins only — RBAC enforced in the UI).</p></div>
+          <div class="card"><div class="card-ico">📜</div><h4>Audit Log</h4><p>Immutable timeline of every analyst action.</p></div>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="ui-stack">
+        <span class="section-kicker">Frontend (UI)</span>
+        <h2>Frontend Stack &amp; Why</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Technology</th><th>Role</th><th>Why this, not X</th></tr></thead>
+          <tbody>
+            <tr><td><strong>React 18</strong></td><td>UI library</td><td>Component-based, huge ecosystem, what most MNCs expect. Re-renders only what changes.</td></tr>
+            <tr><td><strong>Vite</strong></td><td>Build tool / dev server</td><td>Instant hot-reload, near-zero config. Much faster than Create-React-App (now deprecated).</td></tr>
+            <tr><td><strong>React Router 6</strong></td><td>Client-side routing</td><td>Maps URLs (/transactions, /rules) to pages without full reloads; guards protected routes.</td></tr>
+            <tr><td><strong>Context API</strong></td><td>Auth state</td><td>Lightweight built-in state sharing for the logged-in user — no need for Redux at this size.</td></tr>
+            <tr><td><strong>CSS variables</strong></td><td>Theming</td><td>Same design tokens as this guide. One variable swap flips the whole app to dark mode.</td></tr>
+            <tr><td><strong>localStorage</strong></td><td>Session + theme</td><td>Keeps you logged in and remembers your theme across refreshes — mirrors how a JWT would be held client-side.</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout info"><span class="ico">💡</span><div class="body"><p>The frontend is intentionally decoupled from the backend. Today it reads from <code>mockData.js</code>; swapping that one file for real <code>fetch()</code> calls to the Admin API would connect it to the live system without touching any component.</p></div></div>
+        <h3>Folder Structure</h3>
+        <pre><code>UI/
+  index.html            Vite entry, loads fonts + favicon
+  vite.config.js        dev server on port 5173
+  package.json          react, react-dom, react-router-dom
+  src/
+    main.jsx            React root + Router
+    App.jsx             routes + auth guard
+    auth.jsx            mock login, session in localStorage
+    mockData.js         users, transactions, rules, audit log
+    styles.css          design system (brand tokens, dark mode)
+    components/
+      Layout.jsx        sidebar + topbar shell
+    pages/
+      Login.jsx         sign-in screen
+      Dashboard.jsx     KPI cards + recent flags
+      Transactions.jsx  table + detail drawer + override
+      Rules.jsx         rule toggles (RBAC)
+      Audit.jsx         action timeline</code></pre>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="ui-login">
+        <span class="section-kicker">Frontend (UI) — Screens</span>
+        <h2>Login Screen</h2>
+        <p>The entry point. It validates credentials against the mock user list, stores a session in <code>localStorage</code>, and redirects to the dashboard. Clicking a demo account auto-fills the form — handy for a quick demo.</p>
+        <div class="diagram"><figure>
+          <svg viewBox="0 0 520 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:440px;display:block;margin:0 auto;font-family:Inter,sans-serif">
+            <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b5fff"/><stop offset="1" stop-color="#00a98f"/></linearGradient></defs>
+            <rect width="520" height="360" rx="14" fill="#f7f8fa"/>
+            <rect x="120" y="36" width="280" height="288" rx="16" fill="#fff" stroke="#e3e6ea"/>
+            <rect x="150" y="60" width="38" height="38" rx="10" fill="url(#lg)"/>
+            <text x="169" y="85" font-size="18" fill="#fff" text-anchor="middle" font-weight="800">🛡</text>
+            <text x="200" y="78" font-size="16" font-weight="800" fill="#1f2733">FraudShield</text>
+            <text x="150" y="118" font-size="10" fill="#7a8595">Analyst Dashboard — sign in to continue</text>
+            <text x="150" y="146" font-size="9" font-weight="700" fill="#7a8595">EMAIL</text>
+            <rect x="150" y="152" width="220" height="30" rx="7" fill="#f0f2f5" stroke="#e3e6ea"/>
+            <text x="160" y="171" font-size="10" fill="#4b5563">HKanalyst@fraudshield.io</text>
+            <text x="150" y="200" font-size="9" font-weight="700" fill="#7a8595">PASSWORD</text>
+            <rect x="150" y="206" width="220" height="30" rx="7" fill="#f0f2f5" stroke="#e3e6ea"/>
+            <text x="160" y="225" font-size="11" fill="#4b5563">••••••••</text>
+            <rect x="150" y="250" width="220" height="34" rx="8" fill="url(#lg)"/>
+            <text x="260" y="272" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">Sign In</text>
+            <text x="150" y="306" font-size="8.5" fill="#7a8595">Demo: HKadmin@fraudshield.io / Admin@123</text>
+          </svg>
+          <figcaption>Figure — Login screen with brand badge, email/password fields, and demo-account hints.</figcaption>
+        </figure></div>
+        <h3>How It Works (example)</h3>
+        <p>When you type <code>HKanalyst@fraudshield.io</code> / <code>Analyst@123</code> and hit <strong>Sign In</strong>, the <code>login()</code> function in <code>auth.jsx</code> searches the mock user list. On a match it saves <code>{name, email, role}</code> to React state and <code>localStorage</code>, then React Router redirects to <code>/</code>. On a mismatch it shows a red "Invalid email or password" banner. In the real system this exact step would instead call <code>POST /api/auth/login</code> and store the returned JWT.</p>
+      </section>
+
+      <section id="ui-dashboard">
+        <span class="section-kicker">Frontend (UI) — Screens</span>
+        <h2>Dashboard</h2>
+        <p>The landing page after login. Four KPI stat cards give an at-a-glance health check, followed by a table of the most recent flagged transactions.</p>
+        <div class="diagram"><figure>
+          <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:0 auto;font-family:Inter,sans-serif">
+            <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b5fff"/><stop offset="1" stop-color="#00a98f"/></linearGradient></defs>
+            <rect width="640" height="360" rx="12" fill="#f7f8fa"/>
+            <!-- sidebar -->
+            <rect x="0" y="0" width="120" height="360" fill="#fff" stroke="#e3e6ea"/>
+            <rect x="14" y="18" width="22" height="22" rx="6" fill="url(#dg)"/>
+            <text x="44" y="33" font-size="10" font-weight="800" fill="#1f2733">FraudShield</text>
+            <rect x="10" y="58" width="100" height="26" rx="6" fill="#e7f0ff"/>
+            <text x="22" y="75" font-size="9" fill="#0a3fb0" font-weight="700">📊 Dashboard</text>
+            <text x="22" y="104" font-size="9" fill="#4b5563">💳 Transactions</text>
+            <text x="22" y="128" font-size="9" fill="#4b5563">⚙️ Fraud Rules</text>
+            <text x="22" y="152" font-size="9" fill="#4b5563">📜 Audit Log</text>
+            <!-- topbar -->
+            <rect x="120" y="0" width="520" height="40" fill="#fff" stroke="#e3e6ea"/>
+            <text x="138" y="25" font-size="12" font-weight="800" fill="#1f2733">Dashboard</text>
+            <circle cx="610" cy="20" r="12" fill="url(#dg)"/>
+            <!-- stat cards -->
+            <g>
+              <rect x="138" y="56" width="112" height="66" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <text x="150" y="80" font-size="13">💳</text><text x="150" y="102" font-size="18" font-weight="800" fill="#1f2733">48</text><text x="150" y="115" font-size="7.5" fill="#7a8595">Transactions</text>
+              <rect x="258" y="56" width="112" height="66" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <text x="270" y="80" font-size="13">🚩</text><text x="270" y="102" font-size="18" font-weight="800" fill="#d64545">13</text><text x="270" y="115" font-size="7.5" fill="#7a8595">Flagged</text>
+              <rect x="378" y="56" width="112" height="66" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <text x="390" y="80" font-size="13">⏳</text><text x="390" y="102" font-size="18" font-weight="800" fill="#c9770a">9</text><text x="390" y="115" font-size="7.5" fill="#7a8595">Pending</text>
+              <rect x="498" y="56" width="128" height="66" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <text x="510" y="80" font-size="13">💰</text><text x="510" y="102" font-size="16" font-weight="800" fill="#1f2733">$84k</text><text x="510" y="115" font-size="7.5" fill="#7a8595">At Risk</text>
+            </g>
+            <!-- table -->
+            <rect x="138" y="138" width="488" height="200" rx="10" fill="#fff" stroke="#e3e6ea"/>
+            <rect x="138" y="138" width="488" height="26" fill="#f0f2f5"/>
+            <text x="150" y="155" font-size="8" font-weight="700" fill="#7a8595">ID    USER    AMOUNT    SCORE    STATUS</text>
+            <line x1="138" y1="190" x2="626" y2="190" stroke="#e3e6ea"/>
+            <line x1="138" y1="216" x2="626" y2="216" stroke="#e3e6ea"/>
+            <line x1="138" y1="242" x2="626" y2="242" stroke="#e3e6ea"/>
+            <text x="150" y="182" font-size="8" fill="#4b5563" font-family="monospace">tx-10024   u-2041   $9,340.12</text>
+            <rect x="420" y="174" width="60" height="11" rx="5.5" fill="#fdecea"/><text x="450" y="183" font-size="7" fill="#a31515" text-anchor="middle" font-weight="700">PENDING</text>
+            <text x="150" y="208" font-size="8" fill="#4b5563" font-family="monospace">tx-10031   u-7120   $12,004.00</text>
+            <rect x="420" y="200" width="60" height="11" rx="5.5" fill="#fff0d4"/><text x="450" y="209" font-size="7" fill="#7a4800" text-anchor="middle" font-weight="700">PENDING</text>
+            <text x="150" y="234" font-size="8" fill="#4b5563" font-family="monospace">tx-10008   u-5582   $6,720.55</text>
+            <rect x="420" y="226" width="68" height="11" rx="5.5" fill="#e7f0ff"/><text x="454" y="235" font-size="7" fill="#0a3fb0" text-anchor="middle" font-weight="700">OVERRIDDEN</text>
+          </svg>
+          <figcaption>Figure — Dashboard: four KPI cards (transactions, flagged, pending, value at risk) over a recent-flags table.</figcaption>
+        </figure></div>
+        <h3>Example: the "Flagged" card</h3>
+        <p>The flagged count is computed live from the data: <code>TRANSACTIONS.filter(t =&gt; t.verdict === 'FLAGGED')</code>. The card also shows the fraud rate as a percentage. Because it is derived in React, if a new flagged transaction arrived (in the real system, via a Kafka-driven update), the number would re-render automatically.</p>
+      </section>
+
+      <section id="ui-transactions">
+        <span class="section-kicker">Frontend (UI) — Screens</span>
+        <h2>Transactions + Detail Drawer</h2>
+        <p>The core working screen. A searchable, filterable table of all transactions. Clicking any row slides open a <strong>detail drawer</strong> from the right showing the full transaction, which fraud rules fired and their scores, and — for analysts — buttons to override the verdict.</p>
+        <div class="diagram"><figure>
+          <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:0 auto;font-family:Inter,sans-serif">
+            <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b5fff"/><stop offset="1" stop-color="#00a98f"/></linearGradient></defs>
+            <rect width="640" height="360" rx="12" fill="#f7f8fa"/>
+            <!-- table behind -->
+            <rect x="20" y="20" width="400" height="320" rx="10" fill="#fff" stroke="#e3e6ea"/>
+            <rect x="20" y="20" width="400" height="30" rx="10" fill="#f0f2f5"/>
+            <rect x="34" y="28" width="150" height="14" rx="7" fill="#e3e6ea"/>
+            <text x="40" y="38" font-size="7" fill="#7a8595">🔍 Search…</text>
+            <g font-family="monospace" font-size="7.5" fill="#4b5563">
+              <text x="34" y="72">tx-10024   u-2041   $9,340</text>
+              <text x="34" y="98">tx-10031   u-7120   $12,004</text>
+              <text x="34" y="124">tx-10008   u-5582   $6,720</text>
+              <text x="34" y="150">tx-10002   u-1023   $214</text>
+            </g>
+            <!-- drawer -->
+            <rect x="360" y="0" width="280" height="360" fill="#fff" stroke="#e3e6ea"/>
+            <rect x="360" y="0" width="280" height="42" fill="#fff" stroke="#e3e6ea"/>
+            <text x="376" y="26" font-size="11" font-weight="800" fill="#1f2733">Transaction tx-10024</text>
+            <rect x="376" y="54" width="120" height="16" rx="8" fill="#fdecea"/><text x="436" y="66" font-size="8" fill="#a31515" text-anchor="middle" font-weight="700">FLAGGED</text>
+            <g font-size="8.5">
+              <text x="376" y="94" fill="#7a8595">Amount</text><text x="624" y="94" fill="#1f2733" text-anchor="end" font-weight="700">$9,340.12</text>
+              <text x="376" y="116" fill="#7a8595">User</text><text x="624" y="116" fill="#1f2733" text-anchor="end" font-family="monospace">u-2041</text>
+              <text x="376" y="138" fill="#7a8595">Score</text><text x="624" y="138" fill="#1f2733" text-anchor="end" font-weight="700">70 / 100</text>
+            </g>
+            <text x="376" y="168" font-size="8" font-weight="700" fill="#7a8595">TRIGGERED RULES</text>
+            <rect x="376" y="176" width="248" height="22" rx="6" fill="#f0f2f5" stroke="#e3e6ea"/><text x="384" y="191" font-size="8" fill="#4b5563">⚠️ Velocity Check</text><text x="616" y="191" font-size="8" fill="#d64545" text-anchor="end" font-weight="700">+40</text>
+            <rect x="376" y="202" width="248" height="22" rx="6" fill="#f0f2f5" stroke="#e3e6ea"/><text x="384" y="217" font-size="8" fill="#4b5563">⚠️ Amount Anomaly</text><text x="616" y="217" font-size="8" fill="#d64545" text-anchor="end" font-weight="700">+30</text>
+            <!-- footer buttons -->
+            <rect x="376" y="312" width="118" height="30" rx="7" fill="#f0f2f5" stroke="#e3e6ea"/><text x="435" y="331" font-size="8.5" fill="#4b5563" text-anchor="middle" font-weight="700">✓ False Positive</text>
+            <rect x="502" y="312" width="118" height="30" rx="7" fill="#d64545"/><text x="561" y="331" font-size="8.5" fill="#fff" text-anchor="middle" font-weight="700">🚨 Confirm Fraud</text>
+          </svg>
+          <figcaption>Figure — Transactions table (left) with the detail drawer open (right) showing triggered rules and override buttons.</figcaption>
+        </figure></div>
+        <h3>Example: overriding a verdict</h3>
+        <p>Suppose analyst Priya opens <code>tx-10024</code>. The drawer shows it scored 70 because the <strong>Velocity Check (+40)</strong> and <strong>Amount Anomaly (+30)</strong> rules both fired. Priya recognises it as a legitimate large purchase and clicks <strong>✓ Mark False Positive</strong>. The row's status instantly updates to <span class="chip override" style="font-size:11px">OVERRIDDEN</span>, and in the real system this would fire <code>PUT /api/admin/verdicts/tx-10024</code> and write an entry to the audit log. The override buttons only appear for analysts and admins — a plain user never sees them (RBAC).</p>
+      </section>
+
+      <section id="ui-rules">
+        <span class="section-kicker">Frontend (UI) — Screens</span>
+        <h2>Fraud Rules</h2>
+        <p>Lists every detection rule with its score weight and an on/off toggle. This screen demonstrates <strong>role-based access control in the UI</strong>: only admins can flip the toggles. Analysts see the rules but the switches are locked, with a notice explaining the restriction — the frontend mirror of a backend 403.</p>
+        <div class="diagram"><figure>
+          <svg viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:0 auto;font-family:Inter,sans-serif">
+            <rect width="600" height="260" rx="12" fill="#f7f8fa"/>
+            <text x="24" y="32" font-size="13" font-weight="800" fill="#1f2733">⚙️ Fraud Detection Rules</text>
+            <text x="576" y="32" font-size="9" fill="#7a8595" text-anchor="end">Flag threshold: 50</text>
+            <!-- rule cards -->
+            <g>
+              <rect x="24" y="48" width="552" height="54" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <rect x="38" y="66" width="34" height="20" rx="6" fill="#e7f0ff"/><text x="55" y="80" font-size="9" fill="#0a3fb0" text-anchor="middle" font-weight="700">+40</text>
+              <text x="86" y="72" font-size="11" font-weight="700" fill="#1f2733">Velocity Check</text>
+              <text x="86" y="88" font-size="8.5" fill="#7a8595">Flags &gt; 5 transactions in 60 seconds (Redis sliding window)</text>
+              <rect x="520" y="66" width="40" height="20" rx="10" fill="#00a98f"/><circle cx="550" cy="76" r="8" fill="#fff"/>
+              <rect x="24" y="112" width="552" height="54" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <rect x="38" y="130" width="34" height="20" rx="6" fill="#e7f0ff"/><text x="55" y="144" font-size="9" fill="#0a3fb0" text-anchor="middle" font-weight="700">+30</text>
+              <text x="86" y="136" font-size="11" font-weight="700" fill="#1f2733">Amount Anomaly</text>
+              <text x="86" y="152" font-size="8.5" fill="#7a8595">Flags a payment &gt; 3x the user 30-day average</text>
+              <rect x="520" y="130" width="40" height="20" rx="10" fill="#00a98f"/><circle cx="550" cy="140" r="8" fill="#fff"/>
+              <rect x="24" y="176" width="552" height="54" rx="10" fill="#fff" stroke="#e3e6ea"/>
+              <rect x="38" y="194" width="34" height="20" rx="6" fill="#e7f0ff"/><text x="55" y="208" font-size="9" fill="#0a3fb0" text-anchor="middle" font-weight="700">+15</text>
+              <text x="86" y="200" font-size="11" font-weight="700" fill="#1f2733">Odd-Hour Spending <tspan fill="#7a4800">(disabled)</tspan></text>
+              <text x="86" y="216" font-size="8.5" fill="#7a8595">Flags large payments between 2 AM and 5 AM</text>
+              <rect x="520" y="194" width="40" height="20" rx="10" fill="#e3e6ea"/><circle cx="530" cy="204" r="8" fill="#fff"/>
+            </g>
+          </svg>
+          <figcaption>Figure — Fraud Rules: each rule shows its weight, description, and an on/off toggle (green = enabled).</figcaption>
+        </figure></div>
+        <h3>Example: the RBAC difference</h3>
+        <p>Log in as <code>HKadmin@fraudshield.io</code> and the toggles are live — click one and the rule flips on/off instantly. Log in as <code>HKanalyst@fraudshield.io</code> and the same toggles are greyed out with a banner: "Only Admins can enable or disable rules." This is the same authorization boundary the backend enforces, surfaced in the UI so analysts aren't shown controls they can't use.</p>
+      </section>
+
+      <section id="ui-audit">
+        <span class="section-kicker">Frontend (UI) — Screens</span>
+        <h2>Audit Log</h2>
+        <p>A chronological timeline of every action analysts and admins have taken — verdict overrides, rule changes, logins, report exports. Each entry records who did it, from which IP, and when. In a real system this is critical for compliance and for investigating disputes.</p>
+        <div class="diagram"><figure>
+          <svg viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:0 auto;font-family:Inter,sans-serif">
+            <rect width="600" height="230" rx="12" fill="#f7f8fa"/>
+            <text x="24" y="30" font-size="13" font-weight="800" fill="#1f2733">📜 Audit Log</text>
+            <rect x="24" y="44" width="552" height="172" rx="10" fill="#fff" stroke="#e3e6ea"/>
+            <g>
+              <circle cx="52" cy="76" r="14" fill="#e7f0ff"/><text x="52" y="81" font-size="11" text-anchor="middle">🔁</text>
+              <text x="78" y="72" font-size="10" font-weight="700" fill="#1f2733">Overrode verdict on tx-10024 → FALSE_POSITIVE</text>
+              <text x="78" y="86" font-size="8" fill="#7a8595">HK Analyst · IP 10.2.14.9 · 8m ago</text>
+              <line x1="24" y1="100" x2="576" y2="100" stroke="#e3e6ea"/>
+              <circle cx="52" cy="128" r="14" fill="#e7f0ff"/><text x="52" y="133" font-size="11" text-anchor="middle">⚙️</text>
+              <text x="78" y="124" font-size="10" font-weight="700" fill="#1f2733">Disabled rule "Odd-Hour Spending"</text>
+              <text x="78" y="138" font-size="8" fill="#7a8595">HK Admin · IP 10.2.14.3 · 42m ago</text>
+              <line x1="24" y1="152" x2="576" y2="152" stroke="#e3e6ea"/>
+              <circle cx="52" cy="180" r="14" fill="#e7f0ff"/><text x="52" y="185" font-size="11" text-anchor="middle">🚨</text>
+              <text x="78" y="176" font-size="10" font-weight="700" fill="#1f2733">Confirmed fraud on tx-10031</text>
+              <text x="78" y="190" font-size="8" fill="#7a8595">HK Analyst · IP 10.2.14.9 · 90m ago</text>
+            </g>
+          </svg>
+          <figcaption>Figure — Audit Log: an immutable timeline with actor, IP, and timestamp for every action.</figcaption>
+        </figure></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="ui-components">
+        <span class="section-kicker">Frontend (UI)</span>
+        <h2>Component Reference</h2>
+        <p>Every reusable piece of the UI, what it does, and where it lives. This is the "parts list" an engineer would read before changing the frontend.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Component</th><th>File</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><strong>AuthProvider</strong></td><td>auth.jsx</td><td>React Context that holds the logged-in user. Exposes <code>login()</code>, <code>logout()</code>, and <code>user</code> to the whole app. Persists the session in localStorage.</td></tr>
+            <tr><td><strong>Protected</strong></td><td>App.jsx</td><td>Route guard. If no user is logged in, redirects to <code>/login</code>. Wraps every dashboard route.</td></tr>
+            <tr><td><strong>Layout</strong></td><td>components/Layout.jsx</td><td>The app shell: fixed sidebar (nav links + sign-out) and top bar (page title, theme toggle, user avatar). Renders the active page via <code>&lt;Outlet /&gt;</code>.</td></tr>
+            <tr><td><strong>Login</strong></td><td>pages/Login.jsx</td><td>Sign-in form with validation, error banner, and clickable demo-account hints.</td></tr>
+            <tr><td><strong>Dashboard</strong></td><td>pages/Dashboard.jsx</td><td>Four KPI stat cards + a recent-flagged table. All figures derived live from the data.</td></tr>
+            <tr><td><strong>Transactions</strong></td><td>pages/Transactions.jsx</td><td>Search + filter table, the detail drawer, and the override logic. The most complex page.</td></tr>
+            <tr><td><strong>Rules</strong></td><td>pages/Rules.jsx</td><td>Rule cards with toggles. Enforces admin-only editing (RBAC).</td></tr>
+            <tr><td><strong>Audit</strong></td><td>pages/Audit.jsx</td><td>Read-only action timeline.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Shared UI Patterns (CSS classes)</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Class</th><th>Looks like</th><th>Used for</th></tr></thead>
+          <tbody>
+            <tr><td><code>.stat</code></td><td>White card, big number, small label</td><td>Dashboard KPI cards</td></tr>
+            <tr><td><code>.chip</code></td><td>Small coloured pill</td><td>Status/verdict tags: <span class="chip flagged" style="font-size:11px">FLAGGED</span> <span class="chip passed" style="font-size:11px">PASSED</span> <span class="chip pending" style="font-size:11px">PENDING</span></td></tr>
+            <tr><td><code>.table-card</code></td><td>Rounded table with sticky header</td><td>Transactions &amp; dashboard lists</td></tr>
+            <tr><td><code>.drawer</code></td><td>Panel sliding in from the right</td><td>Transaction detail view</td></tr>
+            <tr><td><code>.toggle</code></td><td>iOS-style on/off switch</td><td>Enabling/disabling fraud rules</td></tr>
+            <tr><td><code>.score-bar</code></td><td>Mini progress bar + number</td><td>Showing fraud score (red ≥ 50)</td></tr>
+            <tr><td><code>.role-badge</code></td><td>Tiny blue pill</td><td>Showing the user's role in the top bar</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="callout tip"><span class="ico">🚀</span><div class="body"><p><strong>Run it yourself:</strong> <code>cd UI</code> then <code>npm install</code> and <code>npm run dev</code>. Open <code>http://localhost:5173</code> and sign in with any demo account. Everything works on mock data — no backend required.</p></div></div>
+      </section>
+
+      <hr class="rule" />
+
+
       <section id="build-deploy">
         <span class="section-kicker">Operations</span>
         <h2>Build &amp; Deployment</h2>
@@ -729,17 +1289,17 @@ mvn spring-boot:run -Dspring-boot.run.profiles=default
         <div class="table-wrap"><table>
           <thead><tr><th>Email</th><th>Password</th><th>Role</th></tr></thead>
           <tbody>
-            <tr><td><code>superadmin@fraudshield.io</code></td><td><code>SuperAdmin@123</code></td><td>ROLE_SUPER_ADMIN</td></tr>
-            <tr><td><code>admin@fraudshield.io</code></td><td><code>Admin@123</code></td><td>ROLE_ADMIN</td></tr>
-            <tr><td><code>analyst@fraudshield.io</code></td><td><code>Analyst@123</code></td><td>ROLE_ANALYST</td></tr>
-            <tr><td><code>user@fraudshield.io</code></td><td><code>User@123</code></td><td>ROLE_USER</td></tr>
+            <tr><td><code>HKsuperadmin@fraudshield.io</code></td><td><code>SuperAdmin@123</code></td><td>ROLE_SUPER_ADMIN</td></tr>
+            <tr><td><code>HKadmin@fraudshield.io</code></td><td><code>Admin@123</code></td><td>ROLE_ADMIN</td></tr>
+            <tr><td><code>HKanalyst@fraudshield.io</code></td><td><code>Analyst@123</code></td><td>ROLE_ANALYST</td></tr>
+            <tr><td><code>HKuser@fraudshield.io</code></td><td><code>User@123</code></td><td>ROLE_USER</td></tr>
           </tbody>
         </table></div>
         <h3>Quick API Test</h3>
         <pre><code># 1. Login
 curl -X POST http://localhost:8085/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@fraudshield.io","password":"User@123"}'
+  -d '{"email":"HKuser@fraudshield.io","password":"User@123"}'
 
 # 2. Submit a transaction (use token from step 1)
 curl -X POST http://localhost:8081/api/transactions \
@@ -853,15 +1413,15 @@ curl http://localhost:8083/api/alerts -H "Authorization: Bearer $TOKEN"</code></
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
 <style>
-#flow-fab{position:fixed;bottom:28px;left:28px;display:flex;align-items:center;gap:8px;padding:0 22px;height:52px;border-radius:999px;background:linear-gradient(135deg,#0b5fff,#00a98f);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',system-ui,sans-serif;border:none;cursor:pointer;box-shadow:0 6px 24px rgba(11,95,255,.35);z-index:1000;transition:transform .2s,box-shadow .2s;}
-#flow-fab:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(11,95,255,.45);}
+#flow-fab{position:fixed;bottom:28px;left:28px;display:flex;align-items:center;gap:8px;padding:0 22px;height:52px;border-radius:999px;background:linear-gradient(135deg,#6d28d9,#f59e0b);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',system-ui,sans-serif;border:none;cursor:pointer;box-shadow:0 6px 24px rgba(109,40,217,.35);z-index:1000;transition:transform .2s,box-shadow .2s;}
+#flow-fab:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(109,40,217,.45);}
 .fab-pulse{width:9px;height:9px;border-radius:50%;background:#fff;animation:fabPulse 1.6s ease-in-out infinite;}
 @keyframes fabPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.5);}}
 #flow-modal{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;transition:opacity .25s;}
 #flow-modal.flow-hidden{opacity:0;pointer-events:none;}
 #flow-backdrop{position:absolute;inset:0;background:rgba(8,13,24,.82);backdrop-filter:blur(10px);}
 #flow-panel{position:relative;width:100%;max-width:960px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 32px 100px rgba(0,0,0,.4);overflow:hidden;display:flex;flex-direction:column;max-height:94vh;}
-.fv-header{background:linear-gradient(135deg,#0b5fff 0%,#0072f5 50%,#00a98f 100%);padding:18px 24px;display:flex;align-items:flex-start;gap:14px;flex-shrink:0;}
+.fv-header{background:linear-gradient(135deg,#6d28d9 0%,#9333ea 50%,#f59e0b 100%);padding:18px 24px;display:flex;align-items:flex-start;gap:14px;flex-shrink:0;}
 .fv-header-icon{font-size:28px;line-height:1;}
 .fv-header-text{flex:1;}
 .fv-header-text h2{color:#fff;font-size:17px;font-weight:800;margin:0 0 3px;}
@@ -874,16 +1434,16 @@ curl http://localhost:8083/api/alerts -H "Authorization: Bearer $TOKEN"</code></
 .fv-stage{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:0 6px;}
 .fv-stage-circle{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:17px;transition:all .3s;box-shadow:var(--shadow-sm);}
 .fv-stage-label{font-size:9px;font-weight:700;color:var(--text-muted);text-align:center;white-space:pre-line;transition:color .3s;letter-spacing:.03em;text-transform:uppercase;line-height:1.3;}
-.fv-stage.fs-active .fv-stage-circle{border-color:#0b5fff;background:#e7f0ff;box-shadow:0 0 0 4px rgba(11,95,255,.18),0 3px 14px rgba(11,95,255,.3);transform:scale(1.18);}
+.fv-stage.fs-active .fv-stage-circle{border-color:#6d28d9;background:#efe7ff;box-shadow:0 0 0 4px rgba(109,40,217,.18),0 3px 14px rgba(109,40,217,.3);transform:scale(1.18);}
 html[data-theme="dark"] .fv-stage.fs-active .fv-stage-circle{background:#16233c;}
-.fv-stage.fs-active .fv-stage-label{color:#0b5fff;font-weight:800;}
-.fv-stage.fs-done .fv-stage-circle{border-color:#00a98f;background:#e6f9f5;}
-.fv-stage.fs-done .fv-stage-label{color:#00a98f;}
+.fv-stage.fs-active .fv-stage-label{color:#6d28d9;font-weight:800;}
+.fv-stage.fs-done .fv-stage-circle{border-color:#f59e0b;background:#fef3e2;}
+.fv-stage.fs-done .fv-stage-label{color:#f59e0b;}
 html[data-theme="dark"] .fv-stage.fs-done .fv-stage-circle{background:#0f2b25;}
 .fv-connector{width:28px;height:2px;background:var(--border);flex-shrink:0;position:relative;}
 .fv-connector::after{content:'';position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left-color:var(--border);}
-.fv-connector.fc-active{background:linear-gradient(90deg,#0b5fff,#00a98f);}
-.fv-connector.fc-active::after{border-left-color:#00a98f;}
+.fv-connector.fc-active{background:linear-gradient(90deg,#6d28d9,#f59e0b);}
+.fv-connector.fc-active::after{border-left-color:#f59e0b;}
 .fv-body{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0;overflow:hidden;}
 @media(max-width:680px){.fv-body{grid-template-columns:1fr;overflow-y:auto;}}
 .fv-left{padding:22px 20px 22px 24px;overflow-y:auto;border-right:1px solid var(--border);}
@@ -922,7 +1482,7 @@ html[data-theme="dark"] .fv-token-part.tp-header{background:#2b1f0a;color:#e2a33
 .fvc-group{display:flex;gap:8px;}
 .fvc-btn{padding:8px 18px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-soft);font-size:12.5px;font-weight:700;font-family:'Inter',system-ui,sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .fvc-btn:hover{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);}
-#fvc-play{background:linear-gradient(135deg,#0b5fff,#00a98f);color:#fff;border-color:transparent;min-width:90px;}
+#fvc-play{background:linear-gradient(135deg,#6d28d9,#f59e0b);color:#fff;border-color:transparent;min-width:90px;}
 #fvc-play:hover{opacity:.9;}
 .fv-counter{font-size:12px;font-weight:700;color:var(--text-muted);}
 </style>
@@ -977,7 +1537,7 @@ docs:[
 {id:'e2e-flow',title:'End-to-End Request Flow',anchor:'e2e-flow',tags:['flow','end to end','request','sequence','walkthrough'],text:'1) Client POST /api/transactions + JWT. 2) JWT filter validates. 3) Transaction saved + Kafka published. 4) Rules Engine evaluates (Redis velocity check). 5) Verdict FLAGGED published. 6) Alert Service creates alert. 7) Notification Worker sends mock email. Total: ~150ms.'},
 {id:'security',title:'Security',anchor:'security',tags:['security','authentication','authorization','rbac','owasp','layers'],text:'5 security layers: HTTPS transport, JWT auth with Redis blacklist, RBAC via Spring Security URL patterns and @PreAuthorize, Bean Validation on all DTOs, BCrypt passwords and hashed tokens. 401 vs 403 distinction. OWASP Top 10 mitigated via JPA parameterized queries, CORS configuration, rate limiting, structured error responses without stack traces.'},
 {id:'resilience',title:'Resilience & Fault Tolerance',anchor:'resilience',tags:['resilience','circuit breaker','retry','fallback','resilience4j'],text:'Resilience4j patterns: Circuit Breaker on Alert Service to Notification publish (50% failure/10 calls opens). Retry on Kafka publish (3 attempts exponential backoff). Rate Limiter on Admin API (100 req/10s). Bulkhead on Rules Engine (50 concurrent evaluations). Dead Letter Topics for failed messages. Idempotency keys prevent duplicate processing.'},
-{id:'build-deploy',title:'Build & Deployment',anchor:'build-deploy',tags:['build','deploy','docker','maven','run','start','how to run'],text:'Run mock mode: cd auth-service && mvn spring-boot:run. Full stack: docker-compose up --build. Pre-seeded accounts: admin@fraudshield.io/Admin@123 (ROLE_ADMIN), analyst@fraudshield.io/Analyst@123 (ROLE_ANALYST), user@fraudshield.io/User@123 (ROLE_USER). Swagger UI: http://localhost:8081/swagger-ui.html.'},
+{id:'build-deploy',title:'Build & Deployment',anchor:'build-deploy',tags:['build','deploy','docker','maven','run','start','how to run'],text:'Run mock mode: cd auth-service && mvn spring-boot:run. Full stack: docker-compose up --build. Pre-seeded accounts: HKadmin@fraudshield.io/Admin@123 (ROLE_ADMIN), HKanalyst@fraudshield.io/Analyst@123 (ROLE_ANALYST), HKuser@fraudshield.io/User@123 (ROLE_USER). Swagger UI: http://localhost:8081/swagger-ui.html.'},
 {id:'glossary',title:'Glossary',anchor:'glossary',tags:['glossary','terms','definitions'],text:'JWT: stateless signed token. Refresh Token: long-lived single-use token for obtaining new JWTs. Token Rotation: each refresh invalidates old token. Blacklist: Redis set of revoked JWTs. Kafka Topic: append-only event log. DLT: dead letter topic for failed messages. Idempotency: same result on repeated operations. Sliding Window: rolling time-based counter. RBAC: role-based access control. Circuit Breaker: stops calling failing services.'},
 {id:'faq',title:'FAQ',anchor:'faq',tags:['faq','questions','answers'],text:'Why JWT not sessions? Stateless, no DB lookup per request. Why Kafka not RabbitMQ? Message retention and replay. Why BCrypt cost 12? ~250ms per hash, brute-force resistant. Why hash refresh tokens? DB breach protection. How change rules without redeploy? Rules in DB refreshed every 60s. Why Redis for rate limiting? O(1) atomic operations, shared across instances.'}
 ],
@@ -1203,7 +1763,7 @@ var STEPS=[
 {stage:4,badgeClass:'lb-security',badgeText:'GATE 1 — CLAIMS',title:'JWT Claims Validation',subtitle:'Signature verified. Now check metadata: expired? Extract the user identity.',
  checks:[{icon:'⏰',text:'<strong>exp (expiry):</strong> is now &lt; exp? Access tokens expire in 15 min. Expired = rejected even if signed.'},{icon:'🆔',text:'<strong>jti (JWT ID):</strong> unique UUID. Used as the Redis blacklist key at Gate 2.'},{icon:'👤',text:'<strong>userId extracted</strong> into SecurityContext — available in every controller.'},{icon:'🏷️',text:'<strong>roles extracted</strong> ["ROLE_USER"] for the authorization check at Gate 3.'}],
  failBox:'Token expired → <strong>401 TOKEN_EXPIRED</strong>. Client must POST /api/auth/refresh to get a new pair.',passBox:'Claims valid. SecurityContext set: {userId="u-123", roles=[ROLE_USER]}',
- rightCards:[{head:'📋 Decoded Payload (Claims)',type:'pre',content:'{\n  "userId": "u-123",\n  "email":  "user@fraudshield.io",\n  "roles":  ["ROLE_USER"],\n  "jti":    "jwt-abc-123",\n  "iat":    1699123456,\n  "exp":    1699124356\n  // now=1699123800, remaining ~9 min\n  // Status: NOT EXPIRED ✔\n}'},{head:'🔄 Refresh Flow (on expiry)',type:'pre',content:'// 401 TOKEN_EXPIRED -> client silently:\nPOST /api/auth/refresh\n{"refreshToken": "550e8400-..."}\n// 1. hash token (SHA-256)\n// 2. lookup in PostgreSQL\n// 3. check not expired, not used\n// 4. DELETE old (rotation)\n// 5. issue new JWT + refresh token\n// client retries original request'}]},
+ rightCards:[{head:'📋 Decoded Payload (Claims)',type:'pre',content:'{\n  "userId": "u-123",\n  "email":  "HKuser@fraudshield.io",\n  "roles":  ["ROLE_USER"],\n  "jti":    "jwt-abc-123",\n  "iat":    1699123456,\n  "exp":    1699124356\n  // now=1699123800, remaining ~9 min\n  // Status: NOT EXPIRED ✔\n}'},{head:'🔄 Refresh Flow (on expiry)',type:'pre',content:'// 401 TOKEN_EXPIRED -> client silently:\nPOST /api/auth/refresh\n{"refreshToken": "550e8400-..."}\n// 1. hash token (SHA-256)\n// 2. lookup in PostgreSQL\n// 3. check not expired, not used\n// 4. DELETE old (rotation)\n// 5. issue new JWT + refresh token\n// client retries original request'}]},
 {stage:5,badgeClass:'lb-security',badgeText:'GATE 2 — REVOCATION',title:'Redis Token Blacklist Check',subtitle:'JWTs can\'t be cancelled — they\'re self-contained. The blacklist is how logout works.',
  checks:[{icon:'💡',text:'<strong>Problem:</strong> a JWT with 14 min left is valid after logout. If stolen, attacker has 14 min.'},{icon:'💾',text:'<strong>Solution:</strong> on logout store the jti in Redis with TTL = remaining life. Blacklisted jti = rejected.'},{icon:'⚡',text:'<strong>Redis GET is O(1)</strong> — under 0.5ms. Shared across all instances.'},{icon:'🧹',text:'<strong>Auto-cleanup:</strong> TTL matches token life, so entries auto-delete. Zero maintenance.'},{icon:'⚠️',text:'<strong>Fail-open:</strong> if Redis is down, this check is skipped (logged + alerted). Availability vs security tradeoff.'}],
  failBox:'jti in blacklist → <strong>401 TOKEN_REVOKED</strong>. User logged out. Re-login required.',passBox:'jti not blacklisted. Token active. Continue to authorization.',
@@ -1319,7 +1879,7 @@ html[data-theme="dark"] .term-link:hover{background:var(--brand-soft);}
   left:50%;
   bottom:calc(100% + 10px);
   transform:translateX(-50%) translateY(6px) scale(.9);
-  background:linear-gradient(135deg,#0b5fff,#00a98f);
+  background:linear-gradient(135deg,#6d28d9,#f59e0b);
   color:#fff;
   font-size:11.5px;
   font-weight:700;
@@ -1327,7 +1887,7 @@ html[data-theme="dark"] .term-link:hover{background:var(--brand-soft);}
   padding:6px 12px;
   border-radius:999px;
   white-space:nowrap;
-  box-shadow:0 6px 20px rgba(11,95,255,.35);
+  box-shadow:0 6px 20px rgba(109,40,217,.35);
   opacity:0;
   pointer-events:none;
   transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1);
@@ -1341,7 +1901,7 @@ html[data-theme="dark"] .term-link:hover{background:var(--brand-soft);}
   bottom:calc(100% + 4px);
   transform:translateX(-50%) translateY(6px) scale(.9);
   border:6px solid transparent;
-  border-top-color:#00a98f;
+  border-top-color:#f59e0b;
   opacity:0;
   pointer-events:none;
   transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1);
@@ -1364,7 +1924,7 @@ html[data-theme="dark"] .term-link:hover{background:var(--brand-soft);}
 /* ===== Term explainer side panel ===== */
 #term-panel{position:fixed;top:0;right:-440px;width:420px;max-width:92vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);box-shadow:-12px 0 40px rgba(0,0,0,.25);z-index:3000;display:flex;flex-direction:column;transition:right .3s cubic-bezier(.4,0,.2,1);}
 #term-panel.open{right:0;}
-.tp-head{background:linear-gradient(135deg,#0b5fff,#00a98f);padding:18px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.tp-head{background:linear-gradient(135deg,#6d28d9,#f59e0b);padding:18px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .tp-head-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .tp-head-info{flex:1;min-width:0;}
 .tp-head-title{color:#fff;font-weight:800;font-size:15px;}

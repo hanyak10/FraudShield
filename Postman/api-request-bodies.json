@@ -1,0 +1,144 @@
+{
+  "_info": {
+    "title": "FraudShield API — Request Body Reference",
+    "description": "What JSON body (and headers) each endpoint expects in Postman. Field types and validation rules are taken directly from the backend DTOs. Copy the 'exampleBody' into Postman's raw JSON body. Set Content-Type: application/json and, for protected endpoints, Authorization: Bearer <accessToken from login>.",
+    "baseUrl": "http://localhost:8080",
+    "authNote": "Run POST /api/auth/login first; use the returned accessToken as 'Authorization: Bearer <token>' on every protected request.",
+    "optionalHeader": {
+      "name": "X-Mock-Response",
+      "values": ["true", "false"],
+      "meaning": "Optional per-request override. true = force seeded mock data, false = force real data. Omit to use the server config (currently mock.enabled=false, i.e. real)."
+    }
+  },
+
+  "endpoints": [
+
+    {
+      "name": "Login",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "auth": "none",
+      "fields": {
+        "email":    { "type": "string", "required": true, "rules": "valid email, not blank" },
+        "password": { "type": "string", "required": true, "rules": "not blank" }
+      },
+      "exampleBody": {
+        "email": "HKadmin@fraudshield.io",
+        "password": "Admin@123"
+      },
+      "demoAccounts": [
+        { "email": "HKadmin@fraudshield.io",      "password": "Admin@123",      "role": "ROLE_ADMIN" },
+        { "email": "HKanalyst@fraudshield.io",    "password": "Analyst@123",    "role": "ROLE_ANALYST" },
+        { "email": "HKsuperadmin@fraudshield.io", "password": "SuperAdmin@123", "role": "ROLE_SUPER_ADMIN" }
+      ],
+      "returns": "{ accessToken, refreshToken, expiresIn: 900, user: { name, email, role } }"
+    },
+
+    {
+      "name": "Refresh token",
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "auth": "none",
+      "fields": {
+        "refreshToken": { "type": "string", "required": true, "rules": "not blank; single-use (rotates on each call)" }
+      },
+      "exampleBody": {
+        "refreshToken": "<paste the refreshToken returned by /login>"
+      },
+      "returns": "{ accessToken, refreshToken, expiresIn: 900, user }"
+    },
+
+    {
+      "name": "Logout",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "auth": "Bearer (any logged-in user)",
+      "fields": "none — empty body",
+      "exampleBody": null,
+      "returns": "204 No Content"
+    },
+
+    {
+      "name": "Current user",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "auth": "Bearer (any logged-in user)",
+      "fields": "none — no body (GET)",
+      "exampleBody": null,
+      "returns": "{ name, email, role }"
+    },
+
+    {
+      "name": "Create transaction (inject real data)",
+      "method": "POST",
+      "path": "/api/transactions",
+      "auth": "Bearer (any logged-in user)",
+      "fields": {
+        "amount":     { "type": "number (decimal)", "required": true,  "rules": "> 0 (Positive)" },
+        "currency":   { "type": "string",           "required": true,  "rules": "exactly 3 letters, ISO 4217 (e.g. USD, EUR, GBP, INR, JPY)" },
+        "merchantId": { "type": "string",           "required": true,  "rules": "not blank" },
+        "latitude":   { "type": "number",           "required": false, "rules": "used to derive country; optional" },
+        "longitude":  { "type": "number",           "required": false, "rules": "used to derive country; optional" }
+      },
+      "exampleBody": {
+        "amount": 149.99,
+        "currency": "USD",
+        "merchantId": "MERCH-COFFEE-01",
+        "latitude": 40.7128,
+        "longitude": -74.0060
+      },
+      "exampleBodyLargeLikelyFlagged": {
+        "amount": 12500.00,
+        "currency": "USD",
+        "merchantId": "MERCH-ELECTRONICS-99",
+        "latitude": 55.7558,
+        "longitude": 37.6173
+      },
+      "returns": "202 Accepted { transactionId, status, createdAt }"
+    },
+
+    {
+      "name": "Override verdict",
+      "method": "PUT",
+      "path": "/api/admin/verdicts/{id}",
+      "pathParams": { "id": "the transaction id, e.g. tx-10048" },
+      "auth": "Bearer — ROLE_ANALYST, ROLE_ADMIN, or ROLE_SUPER_ADMIN",
+      "fields": {
+        "decision": { "type": "string", "required": true, "rules": "one of: FALSE_POSITIVE | CONFIRMED_FRAUD" }
+      },
+      "exampleBody": {
+        "decision": "FALSE_POSITIVE"
+      },
+      "exampleBodyConfirm": {
+        "decision": "CONFIRMED_FRAUD"
+      },
+      "returns": "updated transaction object (FALSE_POSITIVE sets status=OVERRIDDEN; CONFIRMED_FRAUD sets confirmedFraud=true)"
+    },
+
+    {
+      "name": "Update / toggle a fraud rule",
+      "method": "PUT",
+      "path": "/api/admin/rules/{id}",
+      "pathParams": { "id": "rule id: velocity | amount | geo | duplicate | nightowl" },
+      "auth": "Bearer — ROLE_ADMIN or ROLE_SUPER_ADMIN only (analyst gets 403)",
+      "fields": {
+        "enabled": { "type": "boolean", "required": false, "rules": "true to enable, false to disable the rule" },
+        "weight":  { "type": "integer", "required": false, "rules": "optional new score weight for the rule" }
+      },
+      "exampleBodyEnable":  { "enabled": true },
+      "exampleBodyDisable": { "enabled": false },
+      "exampleBodyWeight":  { "enabled": true, "weight": 25 },
+      "returns": "updated rule object { id, name, description, weight, enabled }"
+    }
+
+  ],
+
+  "readOnlyEndpoints_noBody": [
+    { "method": "GET", "path": "/api/transactions",                 "auth": "Bearer", "query": "?q=&verdict=FLAGGED|PASSED&status=PENDING (all optional)" },
+    { "method": "GET", "path": "/api/transactions/{id}",            "auth": "Bearer" },
+    { "method": "GET", "path": "/api/admin/transactions",           "auth": "Bearer ROLE_ANALYST+" },
+    { "method": "GET", "path": "/api/admin/rules",                  "auth": "Bearer ROLE_ANALYST+" },
+    { "method": "GET", "path": "/api/admin/audit-logs",             "auth": "Bearer ROLE_ADMIN+" },
+    { "method": "GET", "path": "/api/config/mock-status",           "auth": "none" }
+  ]
+}

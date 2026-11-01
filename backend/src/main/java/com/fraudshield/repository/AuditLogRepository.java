@@ -1,0 +1,12 @@
+package com.fraudshield.repository;
+
+import com.fraudshield.model.AuditLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+    List<AuditLog> findAllByOrderByCreatedAtDesc();
+
+    List<AuditLog> findBySeededFalseOrderByCreatedAtDesc();
+}

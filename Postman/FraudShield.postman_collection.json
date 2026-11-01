@@ -1,0 +1,302 @@
+{
+  "info": {
+    "name": "FraudShield — Real Data (REST)",
+    "description": "Inject and manage REAL FraudShield data via REST.\n\nThe backend runs with `fraudshield.mock.enabled: false`, so the UI panels start EMPTY. Every transaction / verdict / rule change you make through this collection shows up live in the UI at http://localhost:5173.\n\nHOW TO USE:\n1. Start the backend:  cd backend && mvn spring-boot:run  (http://localhost:8080)\n2. Run '1. Login (HK Admin)' first — it auto-saves the accessToken + refreshToken to collection variables.\n3. Run the other requests. The token is attached automatically via the collection-level Bearer auth.\n4. Open the UI and sign in with the same HK account to watch the data appear.\n\nDEMO ACCOUNTS (login body):\n  HKadmin@fraudshield.io / Admin@123        (ROLE_ADMIN)\n  HKanalyst@fraudshield.io / Analyst@123    (ROLE_ANALYST)\n  HKsuperadmin@fraudshield.io / SuperAdmin@123 (ROLE_SUPER_ADMIN)\n\nX-Mock-Response header: optional per-request override. Send 'true' to force mock data, 'false' to force real. Omit it to use the server config (currently real).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "lastTxId", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Login (HK Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('has accessToken', () => pm.expect(json.accessToken).to.be.a('string'));",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "console.log('Logged in as', json.user && json.user.name, '-', json.user && json.user.role);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"HKadmin@fraudshield.io\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (HK Analyst)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"HKanalyst@fraudshield.io\",\n  \"password\": \"Analyst@123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Current User (/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "if (json.refreshToken) pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions (inject real data)",
+      "item": [
+        {
+          "name": "Create Transaction — normal (PASSED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('status 202', () => pm.response.to.have.status(202));",
+                  "if (json.transactionId) pm.collectionVariables.set('lastTxId', json.transactionId);",
+                  "console.log('Created', json.transactionId, '->', json.status);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 149.99,\n  \"currency\": \"USD\",\n  \"merchantId\": \"MERCH-COFFEE-01\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api", "transactions"] }
+          }
+        },
+        {
+          "name": "Create Transaction — large (likely FLAGGED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('status 202', () => pm.response.to.have.status(202));",
+                  "if (json.transactionId) pm.collectionVariables.set('lastTxId', json.transactionId);",
+                  "console.log('Created', json.transactionId, '->', json.status);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 12500.00,\n  \"currency\": \"USD\",\n  \"merchantId\": \"MERCH-ELECTRONICS-99\",\n  \"latitude\": 55.7558,\n  \"longitude\": 37.6173\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api", "transactions"] }
+          }
+        },
+        {
+          "name": "List Transactions (REAL — no header)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api", "transactions"] }
+          }
+        },
+        {
+          "name": "List Transactions — force MOCK (X-Mock-Response: true)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Mock-Response", "value": "true" }],
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api", "transactions"] }
+          }
+        },
+        {
+          "name": "List Transactions — filter FLAGGED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?verdict=FLAGGED",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions"],
+              "query": [{ "key": "verdict", "value": "FLAGGED" }]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction by ID (lastTxId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/transactions/{{lastTxId}}", "host": ["{{baseUrl}}"], "path": ["api", "transactions", "{{lastTxId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin (analyst+)",
+      "item": [
+        {
+          "name": "List Transactions (admin view)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/transactions", "host": ["{{baseUrl}}"], "path": ["api", "admin", "transactions"] }
+          }
+        },
+        {
+          "name": "Override Verdict — FALSE_POSITIVE",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"decision\": \"FALSE_POSITIVE\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/admin/verdicts/{{lastTxId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "verdicts", "{{lastTxId}}"] }
+          }
+        },
+        {
+          "name": "Override Verdict — CONFIRMED_FRAUD",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"decision\": \"CONFIRMED_FRAUD\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/admin/verdicts/{{lastTxId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "verdicts", "{{lastTxId}}"] }
+          }
+        },
+        {
+          "name": "Audit Log (admin+)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/audit-logs", "host": ["{{baseUrl}}"], "path": ["api", "admin", "audit-logs"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fraud Rules",
+      "item": [
+        {
+          "name": "List Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/rules", "host": ["{{baseUrl}}"], "path": ["api", "admin", "rules"] }
+          }
+        },
+        {
+          "name": "Enable Rule (admin only) — nightowl",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"enabled\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/api/admin/rules/nightowl", "host": ["{{baseUrl}}"], "path": ["api", "admin", "rules", "nightowl"] }
+          }
+        },
+        {
+          "name": "Disable Rule (admin only) — nightowl",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"enabled\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/api/admin/rules/nightowl", "host": ["{{baseUrl}}"], "path": ["api", "admin", "rules", "nightowl"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Config",
+      "item": [
+        {
+          "name": "Mock Status (no header → config)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/config/mock-status", "host": ["{{baseUrl}}"], "path": ["api", "config", "mock-status"] }
+          }
+        },
+        {
+          "name": "Mock Status — force true (header wins)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Mock-Response", "value": "true" }],
+            "url": { "raw": "{{baseUrl}}/api/config/mock-status", "host": ["{{baseUrl}}"], "path": ["api", "config", "mock-status"] }
+          }
+        }
+      ]
+    }
+  ]
+}

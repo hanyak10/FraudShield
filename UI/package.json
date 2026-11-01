@@ -1,0 +1,22 @@
+{
+  "name": "fraudshield-ui",
+  "version": "1.0.0",
+  "description": "FraudShield Fraud Analyst Dashboard — React + Vite (mock data)",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev-with-eureka.cjs",
+    "dev:no-eureka": "vite",
+    "eureka": "node register-eureka.cjs",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}
