@@ -27,7 +27,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:
 .sidebar-search{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .sidebar-search input{width:100%;padding:7px 10px 7px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:var(--sans);outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a8595' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;transition:border-color .2s;}
 .sidebar-search input:focus{border-color:var(--brand);}
-nav.toc{padding:12px 0 80px;flex:1;}
+.sidebar-connect{padding:14px 16px 16px;border-top:1px solid var(--border);flex-shrink:0;}
+.sidebar-connect-label{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+.sidebar-connect-row{display:flex;gap:8px;}
+.sidebar-connect-row a{flex:1;display:flex;align-items:center;justify-content:center;height:36px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text-soft);transition:background .15s,color .15s,border-color .15s,transform .15s;}
+.sidebar-connect-row a:hover{background:var(--brand-soft);color:var(--brand-ink);border-color:var(--brand);transform:translateY(-1px);}
+.sidebar-connect-row a.portfolio-link{background:linear-gradient(135deg,var(--brand),var(--accent));border:none;color:#fff;}
+.sidebar-connect-row a.portfolio-link:hover{opacity:.9;transform:translateY(-1px);}
+nav.toc{padding:12px 0 24px;flex:1;}
 .toc-chapter{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:14px 20px 4px;display:block;}
 nav.toc a{display:block;padding:6px 20px;font-size:13.5px;color:var(--text-soft);text-decoration:none;border-left:2px solid transparent;transition:background .15s,color .15s,border-color .15s;}
 nav.toc a .num{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-right:6px;}
@@ -233,11 +240,26 @@ html[data-theme="dark"] .chip.err{background:#2b0f0f;color:#ff6b6b;}
       <a href="#ui-components">Component Reference</a>
       <span class="toc-chapter">Operations</span>
       <a href="#build-deploy">Build &amp; Deployment</a>
+      <a href="#setup-guide">🚀 Setup Guide (Live Repo)</a>
       <span class="toc-chapter">Reference</span>
       <a href="#version-history">Version Control &amp; Upgrade History</a>
       <a href="#glossary">Glossary</a>
       <a href="#faq">FAQ</a>
     </nav>
+    <div class="sidebar-connect">
+      <div class="sidebar-connect-label">Connect with HK</div>
+      <div class="sidebar-connect-row">
+        <a href="https://github.com/hanyak10" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub profile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.38 7.86 10.9.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.74.4-1.25.72-1.54-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.58.24 2.75.12 3.04.74.81 1.19 1.84 1.19 3.1 0 4.43-2.71 5.4-5.28 5.69.42.36.78 1.07.78 2.15 0 1.56-.01 2.81-.01 3.19 0 .3.21.66.79.55A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg>
+        </a>
+        <a href="https://www.linkedin.com/in/hanyak10" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn profile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.38-1.85 3.62 0 4.27 2.38 4.27 5.47v6.27ZM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg>
+        </a>
+        <a class="portfolio-link" href="https://hanyak10.github.io/heyitshkhere/" target="_blank" rel="noopener noreferrer" title="Portfolio" aria-label="Portfolio website">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg>
+        </a>
+      </div>
+    </div>
   </aside>
 
   <main class="content">
@@ -1310,6 +1332,79 @@ curl -X POST http://localhost:8081/api/transactions \
 
 # 3. Check alerts
 curl http://localhost:8083/api/alerts -H "Authorization: Bearer $TOKEN"</code></pre>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="setup-guide">
+        <span class="section-kicker">Operations</span>
+        <h2>🚀 Setup Guide — Clone &amp; Run It Yourself</h2>
+
+        <div class="callout tip"><span class="ico">🎉</span><div class="body"><p><span class="i18n" data-hi="Agar yahan tak sach mein padh ke aaye ho — HLD, six-service wali kahani, Eureka ka deep-dive, sab kuch — respect hai bhai. Ab bas padhna band karo aur FraudShield ko actually chalao. Real repo clone karo aur 5 minute ke andar boot hote dekho.">If you've actually read this far — the HLD, the six-service story, the Eureka deep-dive, all of it — respect. Time to stop reading about FraudShield and actually run it. Clone the real repo and see it boot in under 5 minutes.</span></p></div></div>
+
+        <div class="callout info"><span class="ico">💡</span><div class="body"><p><span class="i18n" data-hi="Ek baat clear kar dete hain — upar jo kuch bhi likha hai (6 microservices, Kafka, 9-container Docker Compose) woh target architecture describe karta hai jiske around yeh guide bana hai. GitHub repo mein actually jo hai woh ek single Spring Boot modular monolith hai — same ideas (JWT, RBAC, rules engine, Eureka, audit trail), lekin infra bahut kam chahiye. Neeche wale steps real, shipped code ke saath match karte hain."><strong>Honest disclosure:</strong> everything above (6 microservices, Kafka, Docker Compose with 9 containers) describes the <em>target</em> architecture this guide is built around. What's actually in the GitHub repo is a single Spring Boot <strong>modular monolith</strong> — same ideas (JWT, RBAC, rules engine, Eureka, audit trail), way less infra to spin up. The steps below match the real, shipped code.</span> <a href="https://github.com/hanyak10/FraudShield" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:10px;padding:6px 12px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;border-radius:var(--radius-sm);font-weight:600;font-size:12.5px;text-decoration:none;transition:opacity .2s;">📦 View on GitHub</a></p></div></div>
+
+        <h3>What You Need</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Part</th><th>Runs on</th><th>Needs</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Backend</strong></td><td><code>:8080</code></td><td>Java 17, Maven 3.9+</td></tr>
+            <tr><td><strong>UI</strong></td><td><code>:5173</code></td><td>Node 18+, npm</td></tr>
+            <tr><td><strong>Eureka server</strong> (optional)</td><td><code>:8761</code></td><td>only if <code>EUREKA_ENABLED=true</code></td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Step 1 — Clone It</h3>
+        <pre><code>git clone https://github.com/hanyak10/FraudShield.git
+cd FraudShield</code></pre>
+        <p>Real layout you'll see on disk:</p>
+        <pre><code>fraudshield/
+├── backend/                 Spring Boot 3.2 monolith (Java 17, H2, JWT, Eureka client)
+├── UI/                      React 18 + Vite analyst dashboard
+├── Postman/                 Importable Postman collection (auto-manages tokens)
+├── api-request-bodies.json  Postman-ready request-body reference
+└── README.md                You are here</code></pre>
+
+        <h3>Step 2 — Run the Backend</h3>
+        <pre><code>cd backend
+mvn spring-boot:run
+# Fresh, seeded H2 database every restart — no setup needed.
+# Swagger UI : http://localhost:8080/swagger-ui.html
+# H2 console : http://localhost:8080/h2-console (jdbc:h2:mem:fraudshield, user sa, blank password)
+# Health     : http://localhost:8080/actuator/health</code></pre>
+        <p>Running standalone without a Eureka registry handy? Skip discovery so it doesn't retry connections forever:</p>
+        <pre><code># PowerShell
+$env:EUREKA_ENABLED="false"; mvn spring-boot:run
+# bash
+EUREKA_ENABLED=false mvn spring-boot:run</code></pre>
+
+        <h3>Step 3 — Run the UI</h3>
+        <pre><code>cd UI
+npm install
+npm run dev
+# Opens http://localhost:5173 — backend already allows CORS for this origin.</code></pre>
+
+        <h3>Step 4 — Eureka Server (Optional)</h3>
+        <p>The backend is a Eureka <em>client</em>; it expects a registry at <code>http://localhost:8761/eureka/</code>. Start any standard Eureka server on <code>:8761</code> first if you want to see live service-discovery registration (the same check this guide's v1.1.0 upgrade verified) — or just set <code>EUREKA_ENABLED=false</code> and skip it entirely.</p>
+
+        <h3>Step 5 — Log In</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Email</th><th>Password</th><th>Role</th><th>Can do</th></tr></thead>
+          <tbody>
+            <tr><td><code>HKadmin@fraudshield.io</code></td><td><code>Admin@123</code></td><td>ROLE_ADMIN</td><td>Everything, incl. toggling rules</td></tr>
+            <tr><td><code>HKanalyst@fraudshield.io</code></td><td><code>Analyst@123</code></td><td>ROLE_ANALYST</td><td>Review + override verdicts</td></tr>
+            <tr><td><code>HKsuperadmin@fraudshield.io</code></td><td><code>SuperAdmin@123</code></td><td>ROLE_SUPER_ADMIN</td><td>Everything</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Prefer Postman?</h3>
+        <p>Import <code>Postman/FraudShield.postman_collection.json</code> and start the backend. Running <strong>Auth → 1. Login (HK Admin)</strong> auto-saves <code>accessToken</code>/<code>refreshToken</code> as collection variables, and every other request attaches <code>Authorization: Bearer {{accessToken}}</code> for you — no copy-pasting tokens by hand.</p>
+
+        <h3>Mock vs. Real Data</h3>
+        <p>The backend serves either seeded demo rows (<code>mock</code>) or only what you create at runtime (<code>real</code>). Force seeded data on any list call with a header:</p>
+        <pre><code>curl -H "X-Mock-Response: true" http://localhost:8080/api/transactions</code></pre>
+
+        <div class="callout tip"><span class="ico">🛡️</span><div class="body"><p><span class="i18n" data-hi="Bas itna hi. Koi Kafka cluster nahi, koi Postgres container nahi, nau services ka orchestra manage nahi karna — sirf mvn spring-boot:run, npm run dev, aur ek login screen. Jao, kuch fake fraud flag karo.">That's it. No Kafka cluster, no Postgres container, no nine-service orchestra to wrangle — just <code>mvn spring-boot:run</code>, <code>npm run dev</code>, and a login screen. Go flag some fake fraud.</span></p></div></div>
       </section>
 
       <hr class="rule" />
