@@ -1575,7 +1575,7 @@ npm run dev
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
 <style>
-#flow-fab{position:fixed;bottom:28px;left:28px;display:flex;align-items:center;gap:8px;padding:0 22px;height:52px;border-radius:999px;background:linear-gradient(135deg,#6d28d9,#f59e0b);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',system-ui,sans-serif;border:none;cursor:pointer;box-shadow:0 6px 24px rgba(109,40,217,.35);z-index:1000;transition:transform .2s,box-shadow .2s;}
+#flow-fab{position:fixed;bottom:28px;left:calc(var(--sidebar-w) + 28px);display:flex;align-items:center;gap:8px;padding:0 22px;height:52px;border-radius:999px;background:linear-gradient(135deg,#6d28d9,#f59e0b);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',system-ui,sans-serif;border:none;cursor:pointer;box-shadow:0 6px 24px rgba(109,40,217,.35);z-index:150;transition:transform .2s,box-shadow .2s;}
 #flow-fab:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(109,40,217,.45);}
 .fab-pulse{width:9px;height:9px;border-radius:50%;background:#fff;animation:fabPulse 1.6s ease-in-out infinite;}
 @keyframes fabPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.5);}}
